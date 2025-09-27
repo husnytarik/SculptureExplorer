@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Sculpture Explorer — MVP</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="./css/styles.css" />
+
+    <!-- three.js import map -->
+    <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
+      "three/examples/jsm/": "https://unpkg.com/three@0.160.1/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+
+<body>
+    <noscript>Bu uygulama için JavaScript gerekli.</noscript>
+
+    <div class="app">
+        <!-- ===== VIEWER ===== -->
+        <div class="viewer" id="viewer">
+            <div class="overlay">
+                <span class="pill" id="hudMode">Mod: Gezinti</span>
+                <span class="pill" id="hudHelp">Sol tık: nokta seç · Sağ tık: temizle · Orta: sürükle/zoom</span>
+            </div>
+            <div class="legend">
+                <span class="dot" style="background:#60a5fa"></span><span class="badge">Ölçüm noktası</span>
+                <span class="dot" style="background:#34d399"></span><span class="badge">Merkez (kesit)</span>
+            </div>
+        </div>
+
+        <!-- ===== SIDEBAR ===== -->
+        <div class="sidebar">
+            <!-- Model -->
+            <div class="card">
+                <h3>Model</h3>
+                <div class="col">
+                    <!-- İsterseniz örnek URL: https://modelviewer.dev/shared-assets/models/Astronaut.glb -->
+                    <input class="input" id="modelUrl" placeholder=".glb / .gltf URL" value="./models/sc.glb" />
+                    <div class="grid">
+                        <button class="btn" id="loadBtn">URL'den Yükle</button>
+                        <button class="btn" id="screenshotBtn">PNG Kaydet</button>
+                    </div>
+                    <div class="grid">
+                        <input type="file" id="localFile" accept=".glb,.gltf,model/gltf-binary" class="input" />
+                        <button class="btn" id="loadLocal">Dosyadan Yükle</button>
+                    </div>
+                    <div class="row" style="justify-content:space-between">
+                        <span class="badge">Üçgen sayısı: <span id="triCount">-</span></span>
+                        <span class="badge">Boyut: <span id="bboxInfo">-</span></span>
+                        <span class="badge">Ölçek (m/birim): <span id="scaleInfo">1.000</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ölçek & Birimler -->
+            <div class="card">
+                <h3>Ölçek & Birimler</h3>
+                <div class="col">
+                    <div class="grid">
+                        <select id="unitSelect" class="select">
+                            <option value="m">Metre (m)</option>
+                            <option value="cm">Santimetre (cm)</option>
+                            <option value="mm">Milimetre (mm)</option>
+                            <option value="ft">Feet (ft)</option>
+                            <option value="in">İnç (in)</option>
+                            <option value="custom">Özel (m/birim)</option>
+                        </select>
+                        <input class="input" id="metersPerUnit" type="number" step="any" value="1"
+                            placeholder="m/birim" />
+                    </div>
+                    <div class="grid">
+                        <input class="input" id="calReal" type="number" step="any"
+                            placeholder="Gerçek uzunluk (metre)" />
+                        <button class="btn" id="btnCalFromLast">Son ölçümle kalibre et</button>
+                    </div>
+                    <span class="muted" style="font-size:12px">İpucu: Önce iki nokta ölçün, sonra gerçek uzunluğu (m)
+                        girip kalibre edin.</span>
+                </div>
+            </div>
+
+            <!-- Katalog -->
+            <div class="card">
+                <h3>Koleksiyon (catalog.json)</h3>
+                <div class="col">
+                    <div class="grid">
+                        <button class="btn" id="loadCatalog">Sunucudan Yükle</button>
+                        <button class="btn" id="applyMeta">Seçileni Uygula</button>
+                    </div>
+                    <div class="grid">
+                        <input type="file" id="catalogFile" accept=".json" class="input" />
+                        <button class="btn" id="loadCatalogFile">Dosyadan Katalog</button>
+                    </div>
+                    <select id="catalogSelect" class="select">
+                        <option value="">— Kayıt seç —</option>
+                    </select>
+                    <div id="catalogPreview" class="muted" style="font-size:12px"></div>
+                </div>
+            </div>
+
+            <!-- Ölçüm -->
+            <div class="card">
+                <h3>Ölçüm Araçları</h3>
+                <div class="col">
+                    <select id="measureMode" class="select">
+                        <option value="none">— Seçiniz</option>
+                        <option value="distance">Mesafe (2 nokta)</option>
+                        <option value="polyline">Yol Uzunluğu (çok nokta)</option>
+                        <option value="surface2">Yüzey Mesafesi (2 nokta)</option>
+                        <option value="surfacePath">Yüzey Yol (çok nokta)</option>
+                        <option value="girth">Kesit Çevresi (β)</option>
+                    </select>
+                    <div class="grid">
+                        <button class="btn" id="clearMarks">İşaretleri Temizle</button>
+                        <button class="btn" id="exportCSV">CSV Dışa Aktar</button>
+                    </div>
+                    <div class="sep"></div>
+                    <div class="col" id="measureReadout">
+                        <span class="muted">Sonuçlar burada görünecek…</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Işık -->
+            <div class="card">
+                <h3>Işık & Görünüm</h3>
+                <div class="col">
+                    <label>Azimut (°) <input id="azimuth" type="range" min="0" max="360" value="45"
+                            class="slider" /></label>
+                    <label>Yükseklik (°) <input id="elevation" type="range" min="0" max="89" value="35"
+                            class="slider" /></label>
+                    <label>Parlaklık <input id="intensity" type="range" min="0" max="300" value="120"
+                            class="slider" /></label>
+                    <label><input id="grayscale" type="checkbox" /> Siyah-Beyaz filtre</label>
+                </div>
+            </div>
+
+            <!-- Meta -->
+            <div class="card">
+                <h3>Bilgi & Etiketler</h3>
+                <div class="col">
+                    <input class="input" id="title" placeholder="Eser adı" />
+                    <div class="grid">
+                        <input class="input" id="category" placeholder="Kategori (ör. Heykel)" />
+                        <input class="input" id="type" placeholder="Tür (ör. büst, figür)" />
+                    </div>
+                    <div class="grid">
+                        <input class="input" id="period" placeholder="Dönem (ör. Roma)" />
+                        <input class="input" id="material" placeholder="Malzeme (ör. Mermer)" />
+                    </div>
+                    <div class="grid">
+                        <input class="input" id="culture" placeholder="Kültür/Okul" />
+                        <input class="input" id="geo" placeholder="Konum (ülke/şehir/alan)" />
+                    </div>
+                    <textarea class="input" id="abstract" rows="3" placeholder="Bilimsel özet / açıklama"></textarea>
+                    <textarea class="input" id="publications" rows="2"
+                        placeholder="Yayınlar (satır başına DOI/URL)"></textarea>
+                    <button class="btn" id="saveMeta">Bu modele metayı ata</button>
+                </div>
+            </div>
+
+            <!-- Arama -->
+            <div class="card">
+                <h3>Arama / Benzer Bul</h3>
+                <div class="col">
+                    <input class="input" id="q" placeholder="Ara: kategori, dönem, malzeme, kültür, konum…" />
+                    <div class="grid">
+                        <button class="btn" id="btnSearch">Ara</button>
+                        <button class="btn" id="btnSimilar">Bu modele benzer</button>
+                    </div>
+                    <div class="list" id="results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobil için panel aç/kapat -->
+    <button class="fab" id="toggleSidebar" aria-label="Panel">☰</button>
+
+    <!-- Entry module -->
+    <script type="module" src="./js/main.js"></script>
+</body>
+
+</html>

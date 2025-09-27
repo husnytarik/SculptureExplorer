@@ -1,0 +1,270 @@
+:root {
+    --bg: #0b0e11;
+    --panel: #12161c;
+    --border: #1f2937;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --accent: #22d3ee;
+    --accent-2: #a78bfa;
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --err: #ef4444;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.app {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    height: 100vh;
+    gap: 10px;
+    padding: 10px;
+}
+
+.viewer {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: #000;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px;
+}
+
+.card h3 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    letter-spacing: .2px;
+    color: #cbd5e1;
+}
+
+.row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.btn {
+    background: #111827;
+    border: 1px solid var(--border);
+    color: #e5e7eb;
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    border-color: #2a364a;
+}
+
+.btn[aria-pressed="true"] {
+    outline: 2px solid var(--accent);
+}
+
+.select,
+.input {
+    background: #0d1117;
+    color: #e5e7eb;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    width: 100%;
+}
+
+.slider {
+    width: 100%;
+}
+
+.badge {
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: #cbd5e1;
+    font-size: 11px;
+}
+
+.legend {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: rgba(0, 0, 0, .45);
+    backdrop-filter: blur(6px);
+    padding: 8px 10px;
+    border: 1px solid #111827;
+    border-radius: 12px;
+}
+
+.legend .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+}
+
+.overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+.pill {
+    background: rgba(0, 0, 0, .5);
+    border: 1px solid #111827;
+    padding: 8px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 220px;
+    overflow: auto;
+}
+
+.item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px;
+    background: #0b0f15;
+}
+
+.item h4 {
+    margin: 0 0 6px;
+    font-size: 13px;
+}
+
+.sep {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+}
+
+canvas {
+    display: block;
+}
+
+
+/* Mobile friendliness */
+.overlay,
+.legend {
+    pointer-events: none;
+}
+
+.btn,
+.input,
+.select {
+    min-height: 44px;
+}
+
+
+.fab {
+    position: fixed;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    background: #111827;
+    border: 1px solid var(--border);
+    color: #e5e7eb;
+    padding: 12px 14px;
+    border-radius: 999px;
+    font-size: 18px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+    z-index: 50;
+    display: none;
+}
+
+@media (max-width:1024px) {
+    .fab {
+        display: block;
+    }
+}
+
+
+.sidebar-hidden .sidebar {
+    display: none;
+}
+
+.sidebar-hidden .app {
+    grid-template-columns: 1fr;
+}
+
+.sidebar-hidden .viewer {
+    height: calc(100vh - 20px);
+}
+
+
+@media (max-width: 1024px) {
+    .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        height: auto;
+        min-height: 100vh;
+        padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    }
+
+    .viewer {
+        height: 56vh;
+        min-height: 320px;
+    }
+
+    .sidebar {
+        max-height: calc(44vh - 10px);
+        overflow: auto;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .legend {
+        left: 8px;
+        bottom: 8px;
+    }
+}
+
+@media (max-width: 640px) {
+    .viewer {
+        height: 60vh;
+    }
+}

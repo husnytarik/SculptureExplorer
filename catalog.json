@@ -1,0 +1,46 @@
+{
+    "items": [
+        {
+            "id": "venus",
+            "file": "./models/venus.glb",
+            "title": "Venus de Milo",
+            "category": "heykel",
+            "type": "figür",
+            "period": "hellenistik",
+            "material": "mermer",
+            "culture": "antik yunan",
+            "geo": "milos",
+            "abstract": "Afrodit heykeli, kolları eksik.",
+            "metrics": {
+                "height_cm": 204
+            },
+            "publications": [
+                {
+                    "title": "Louvre Catalog Entry",
+                    "url": "https://example.org/venus"
+                }
+            ]
+        },
+        {
+            "id": "augustus",
+            "file": "./models/augustus.glb",
+            "title": "Augustus of Prima Porta",
+            "category": "heykel",
+            "type": "portre",
+            "period": "roma",
+            "material": "mermer",
+            "culture": "roma",
+            "geo": "vatikan",
+            "abstract": "Augustus Caesar zırhlı portresi.",
+            "metrics": {
+                "height_cm": 207
+            },
+            "publications": [
+                {
+                    "title": "Musei Vaticani scheda",
+                    "url": "https://example.org/augustus"
+                }
+            ]
+        }
+    ]
+}
