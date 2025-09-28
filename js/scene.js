@@ -68,3 +68,41 @@ function loop() {
     }
     requestAnimationFrame(loop);
 }
+
+export function setFov(fov) {
+    if (camera && camera.isPerspectiveCamera) {
+        camera.fov = Math.max(20, Math.min(120, fov));
+        camera.updateProjectionMatrix();
+        requestRender();
+    }
+}
+
+export function switchToPerspective() {
+    if (!root) return;
+    const aspect = root.clientWidth / root.clientHeight;
+    const pos = camera.position.clone(); // mevcut konumu koru
+    camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 1000);
+    camera.position.copy(pos);
+    controls.object = camera;
+    controls.update();
+    requestRender();
+}
+
+export function switchToOrthographic() {
+    if (!root) return;
+    const aspect = root.clientWidth / root.clientHeight;
+    const frustumSize = 2; // sahne boyuna göre ayarla
+    const pos = camera.position.clone();
+    camera = new THREE.OrthographicCamera(
+        -frustumSize * aspect,
+        frustumSize * aspect,
+        frustumSize,
+        -frustumSize,
+        0.01,
+        1000
+    );
+    camera.position.copy(pos);
+    controls.object = camera;
+    controls.update();
+    requestRender();
+}

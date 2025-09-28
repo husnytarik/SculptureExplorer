@@ -132,6 +132,12 @@
             <!-- Işık -->
             <div class="card">
                 <h3>Işık & Görünüm</h3>
+                <label>FOV
+                    <input id="fovSlider" type="range" min="20" max="120" value="45">
+                </label>
+
+                <button id="btnPerspective">Perspective</button>
+                <button id="btnOrtho">Orthographic</button>
                 <label class="row" style="gap:8px;">
                     <input id="gridToggle" type="checkbox" checked> Grid görünsün
                 </label>
@@ -146,7 +152,7 @@
                             class="slider" /></label>
                     <label>Yükseklik (°) <input id="elevation" type="range" min="0" max="89" value="35"
                             class="slider" /></label>
-                    <label>Parlaklık <input id="intensity" type="range" min="0" max="300" value="120"
+                    <label>Parlaklık <input id="intensity" type="range" min="0" max="1000" value="120"
                             class="slider" /></label>
                     <label><input id="grayscale" type="checkbox" /> Siyah-Beyaz filtre</label>
                 </div>

@@ -9,22 +9,9 @@ import { initCatalog } from './catalog.js';
 import { flash, fmtLen } from './ui.js';
 import { initFilters } from './filters.js';
 import { grid, requestRender } from './scene.js';
+import { setFov, switchToPerspective, switchToOrthographic } from './scene.js';
 
-const gridToggle = document.getElementById('gridToggle');
 
-if (gridToggle) {
-    // ilk açılışta grid’i duruma göre ayarla
-    if (grid) {
-        grid.visible = !!gridToggle.checked;
-    }
-
-    gridToggle.addEventListener('change', function () {
-        if (grid) {
-            grid.visible = !!gridToggle.checked;
-            requestRender(); // sahneyi hemen yenile
-        }
-    });
-}
 
 function must(id) {
     var el = document.getElementById(id);
@@ -116,6 +103,22 @@ function start() {
     // Sahne
     var s = initScene(els.viewer);
     var renderer = s.renderer, scene = s.scene, camera = s.camera, controls = s.controls;
+
+    const gridToggle = document.getElementById('gridToggle');
+
+    if (gridToggle) {
+        // ilk açılışta grid’i duruma göre ayarla
+        if (grid) {
+            grid.visible = !!gridToggle.checked;
+        }
+
+        gridToggle.addEventListener('change', function () {
+            if (grid) {
+                grid.visible = !!gridToggle.checked;
+                requestRender(); // sahneyi hemen yenile
+            }
+        });
+    }
     // Arka plan rengi
     var bgColor = document.getElementById('bgColor');
     if (bgColor) bgColor.addEventListener('input', function () {
@@ -308,4 +311,25 @@ if (document.readyState === 'loading') {
     window.addEventListener('DOMContentLoaded', start);
 } else {
     start();
+}
+
+const fovSlider = document.getElementById('fovSlider');
+if (fovSlider) {
+    fovSlider.addEventListener('input', () => {
+        setFov(Number(fovSlider.value));
+    });
+}
+
+const btnPerspective = document.getElementById('btnPerspective');
+if (btnPerspective) {
+    btnPerspective.addEventListener('click', () => {
+        switchToPerspective();
+    });
+}
+
+const btnOrtho = document.getElementById('btnOrtho');
+if (btnOrtho) {
+    btnOrtho.addEventListener('click', () => {
+        switchToOrthographic();
+    });
 }
