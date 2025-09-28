@@ -11,13 +11,14 @@
 
     <!-- three.js import map -->
     <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
-      "three/examples/jsm/": "https://unpkg.com/three@0.160.1/examples/jsm/"
-    }
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+    "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
   }
-  </script>
+}
+</script>
+
 </head>
 
 <body>
@@ -131,7 +132,16 @@
             <!-- Işık -->
             <div class="card">
                 <h3>Işık & Görünüm</h3>
+                <label class="row" style="gap:8px;">
+                    <input id="gridToggle" type="checkbox" checked> Grid görünsün
+                </label>
+                <label>Arka Plan
+                    <input id="bgColor" type="color" value="#000000" class="input" />
+                </label>
                 <div class="col">
+                    <label class="row" style="gap:8px;">
+                        <input id="dirOff" type="checkbox"> Directional kapalı
+                    </label>
                     <label>Azimut (°) <input id="azimuth" type="range" min="0" max="360" value="45"
                             class="slider" /></label>
                     <label>Yükseklik (°) <input id="elevation" type="range" min="0" max="89" value="35"
@@ -141,6 +151,36 @@
                     <label><input id="grayscale" type="checkbox" /> Siyah-Beyaz filtre</label>
                 </div>
             </div>
+
+            <!-- Filtreler -->
+            <div class="card">
+                <h3>Filtreler</h3>
+                <div class="col">
+                    <div class="grid">
+                        <label class="row" style="gap:8px;"><input type="checkbox" id="fxSsao"> SSAO (ortam
+                            gölgeleme)</label>
+                        <div class="grid">
+                            <label class="row" style="gap:8px;"><input type="checkbox" id="fxCurv"> Curvature
+                                (Cavity)</label>
+                            <label>Güç <input type="range" id="fxCurvAmt" class="slider" min="0.01" max="200"
+                                    value="80"></label>
+                        </div>
+
+                        <label class="row" style="gap:8px;"><input type="checkbox" id="fxEdges"> Kenar Vurgusu
+                            (Sobel)</label>
+                    </div>
+                    <div class="grid">
+                        <select id="fxQuality" class="select">
+                            <option value="low">Kalite: Düşük (mobil)</option>
+                            <option value="high" selected>Kalite: Yüksek</option>
+                        </select>
+                        <button class="btn" id="btnRaking">Raking Işık (preset)</button>
+                        <button class="btn" id="btnFxReset">Filtreleri Sıfırla</button>
+                    </div>
+                    <span class="muted" style="font-size:12px">Mobilde performans için kaliteyi “Düşük” seçin.</span>
+                </div>
+            </div>
+
 
             <!-- Meta -->
             <div class="card">

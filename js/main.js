@@ -1,3 +1,4 @@
+// /js/main.js
 // @ts-nocheck
 import { initScene, getDomElement, THREE } from './scene.js';
 import { initLighting } from './lighting.js';
@@ -6,11 +7,41 @@ import { initMeasurements } from './measurements.js';
 import { initMetadata } from './metadata.js';
 import { initCatalog } from './catalog.js';
 import { flash, fmtLen } from './ui.js';
+import { initFilters } from './filters.js';
+import { grid, requestRender } from './scene.js';
+
+const gridToggle = document.getElementById('gridToggle');
+
+if (gridToggle) {
+    // ilk açılışta grid’i duruma göre ayarla
+    if (grid) {
+        grid.visible = !!gridToggle.checked;
+    }
+
+    gridToggle.addEventListener('change', function () {
+        if (grid) {
+            grid.visible = !!gridToggle.checked;
+            requestRender(); // sahneyi hemen yenile
+        }
+    });
+}
 
 function must(id) {
     var el = document.getElementById(id);
     if (!el) { var msg = '[main] DOM id bulunamadı: #' + id; console.error(msg); flash(msg); }
     return el;
+}
+
+function countTriangles(object) {
+    var tri = 0;
+    object.traverse(function (n) {
+        if (n.isMesh && n.geometry) {
+            var g = n.geometry;
+            var cnt = g.index ? g.index.count : (g.attributes.position ? g.attributes.position.count : 0);
+            tri += (cnt / 3) | 0;
+        }
+    });
+    return tri | 0;
 }
 
 function start() {
@@ -59,6 +90,12 @@ function start() {
         btnCalFromLast: must('btnCalFromLast')
     };
 
+    // Opsiyonel: Filtre UI elemanları (kartı eklemediyseniz null olabilir)
+    var fxSSAO = document.getElementById('fxSsao');
+    var fxEdges = document.getElementById('fxEdges');
+    var fxQual = document.getElementById('fxQuality');
+    var btnRaking = document.getElementById('btnRaking');
+
     // Birim/ölçek
     var metersPerUnit = 1.0;
     var lastRoot = null;
@@ -76,28 +113,95 @@ function start() {
     }
     function toMeters(x) { return x * metersPerUnit; }
 
+    // Sahne
     var s = initScene(els.viewer);
     var renderer = s.renderer, scene = s.scene, camera = s.camera, controls = s.controls;
+    // Arka plan rengi
+    var bgColor = document.getElementById('bgColor');
+    if (bgColor) bgColor.addEventListener('input', function () {
+        const c = new THREE.Color(bgColor.value);
+        renderer.setClearColor(c, 1);
+        requestRender(); // <-- EKLE
+    });
 
-    initLighting({ scene: scene, renderer: renderer, azimuth: els.azimuth, elevation: els.elevation, intensity: els.intensity, grayscale: els.grayscale });
 
-    var measure = initMeasurements({ scene: scene, camera: camera, renderer: renderer, readoutEl: els.measureReadout, hudModeEl: els.hudMode, toMeters: toMeters, fmtLen: fmtLen });
+    // Işık
+    var lighting = initLighting({
+        scene: scene,
+        renderer: renderer,
+        azimuth: els.azimuth,
+        elevation: els.elevation,
+        intensity: els.intensity,
+        grayscale: els.grayscale
+    });
+    // Directional kapalı/açık
+    var dirOff = document.getElementById('dirOff');
+    if (dirOff) dirOff.addEventListener('change', function () {
+        lighting.sun.visible = !dirOff.checked;
+        // Eğer intensity ile yönetiyorsan:
+        // lighting.sun.intensity = dirOff.checked ? 0 : (Number(els.intensity.value||120)/100);
+        requestRender(); // <-- EKLE
+    });
+
+    // Filtreler (SSAO, Kenar, FXAA, Curvature)
+    var filters = initFilters({ renderer: renderer, scene: scene, camera: camera });
+
+    var fxSSAO = document.getElementById('fxSsao');
+    var fxEdges = document.getElementById('fxEdges');
+    var fxQual = document.getElementById('fxQuality');
+    var fxCurv = document.getElementById('fxCurv');
+    var fxCurvAmt = document.getElementById('fxCurvAmt');
+
+    if (fxSSAO) fxSSAO.addEventListener('change', function () { filters.enableSSAO(!!fxSSAO.checked); });
+    if (fxEdges) fxEdges.addEventListener('change', function () { filters.enableEdges(!!fxEdges.checked); });
+    if (fxQual) fxQual.addEventListener('change', function () { filters.setQuality(fxQual.value); });
+    if (fxCurv) fxCurv.addEventListener('change', function () { filters.enableCurvature(!!fxCurv.checked); });
+    if (fxCurvAmt) fxCurvAmt.addEventListener('input', function () { filters.setCurvatureStrength((Number(fxCurvAmt.value) || 80) / 100); });
+
+    const btnFxReset = document.getElementById('btnFxReset');
+    if (btnFxReset) {
+        btnFxReset.addEventListener('click', () => {
+            filters.reset();
+            const cbSSAO = document.getElementById('fxSsao');
+            const cbEdges = document.getElementById('fxEdges');
+            if (cbSSAO) cbSSAO.checked = false;
+            if (cbEdges) cbEdges.checked = false;
+        });
+    }
+
+    // Ölçüm
+    var measure = initMeasurements({
+        scene: scene,
+        camera: camera,
+        renderer: renderer,
+        readoutEl: els.measureReadout,
+        hudModeEl: els.hudMode,
+        toMeters: toMeters,
+        fmtLen: fmtLen
+    });
     measure.attachCanvas(getDomElement());
     els.measureMode.addEventListener('change', function () { measure.setMode(els.measureMode.value); });
     els.clearMarks.addEventListener('click', function () { measure.clear(); });
     els.exportCSV.addEventListener('click', function () { measure.exportCSV(); });
 
+    // Loader
     var loader = initLoader({
         scene: scene, camera: camera, controls: controls, renderer: renderer,
         onAfterLoad: function (r) {
             var root = r.root, mesh = r.mesh;
             lastRoot = root;
             measure.setTargetMesh(mesh);
+
+            // BBox ve üçgen sayısı
             var size = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
             els.bboxInfo.textContent =
                 fmtLen(size.x * metersPerUnit) + ' × ' +
                 fmtLen(size.y * metersPerUnit) + ' × ' +
                 fmtLen(size.z * metersPerUnit);
+            try {
+                var tri = countTriangles(root);
+                els.triCount.textContent = tri.toLocaleString('tr-TR');
+            } catch (e) { console.warn('Tri count failed:', e); }
         }
     });
 
