@@ -9,10 +9,19 @@ let renderer, scene, camera, controls, root;
 let needsRender = true;
 let externalRender = null;
 
-// 👇 grid’i modül seviyesinde export et
+// Dışarıdan erişilsin
 export let grid = null;
-// (İstersen getter da verebiliriz)
-// export function getGrid() { return grid; }
+
+// Kamera yardımcıları
+export function getCamera() { return camera; }
+export function getDomElement() { return renderer?.domElement; }
+export function requestRender() { needsRender = true; }
+
+// Post-process için render override (composer devredeyken)
+export function setRenderOverride(fn) {
+    externalRender = typeof fn === 'function' ? fn : null;
+    requestRender();
+}
 
 export function initScene(container) {
     root = container;
@@ -33,7 +42,6 @@ export function initScene(container) {
     controls.target.set(0, 0.5, 0);
     controls.addEventListener('change', () => requestRender());
 
-    // 👇 burada değeri ata (artık export let grid dışarıdan erişilebilir)
     grid = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
     grid.name = 'ground_grid';
     scene.add(grid);
@@ -44,56 +52,71 @@ export function initScene(container) {
     return { renderer, scene, camera, controls };
 }
 
-export function requestRender() { needsRender = true; }
-export function getDomElement() { return renderer.domElement; }
-
-// Post-process için dış render fonksiyonu
-export function setRenderOverride(fn) {
-    externalRender = typeof fn === 'function' ? fn : null;
-}
-
 function onResize() {
     if (!renderer || !camera || !root) return;
     renderer.setSize(root.clientWidth, root.clientHeight);
-    camera.aspect = root.clientWidth / root.clientHeight;
+
+    if (camera.isPerspectiveCamera) {
+        camera.aspect = root.clientWidth / root.clientHeight;
+    } else if (camera.isOrthographicCamera) {
+        const aspect = root.clientWidth / root.clientHeight;
+        const frustumSize = 2; // ihtiyaca göre ayarla
+        camera.left = -frustumSize * aspect;
+        camera.right = frustumSize * aspect;
+        camera.top = frustumSize;
+        camera.bottom = -frustumSize;
+    }
     camera.updateProjectionMatrix();
     requestRender();
 }
 
 function loop() {
+    // Damping için şart
+    if (controls) controls.update();
+
     if (needsRender) {
-        if (externalRender) externalRender();
+        if (externalRender) externalRender(); // composer render’ı
         else renderer.render(scene, camera);
         needsRender = false;
     }
     requestAnimationFrame(loop);
 }
 
+// --------- Kamera API’si ---------
 export function setFov(fov) {
     if (camera && camera.isPerspectiveCamera) {
-        camera.fov = Math.max(20, Math.min(120, fov));
+        camera.fov = Math.max(20, Math.min(120, Number(fov) || 45));
         camera.updateProjectionMatrix();
         requestRender();
     }
 }
 
 export function switchToPerspective() {
-    if (!root) return;
+    if (!root || !camera) return;
     const aspect = root.clientWidth / root.clientHeight;
-    const pos = camera.position.clone(); // mevcut konumu koru
-    camera = new THREE.PerspectiveCamera(45, aspect, 0.01, 1000);
-    camera.position.copy(pos);
-    controls.object = camera;
-    controls.update();
+    const pos = camera.position.clone();
+    const target = controls?.target?.clone?.() || new THREE.Vector3(0, 0, 0);
+
+    const newCam = new THREE.PerspectiveCamera(45, aspect, 0.01, 1000);
+    newCam.position.copy(pos);
+
+    camera = newCam;
+    if (controls) {
+        controls.object = camera;
+        controls.target.copy(target);
+        controls.update();
+    }
     requestRender();
 }
 
 export function switchToOrthographic() {
-    if (!root) return;
+    if (!root || !camera) return;
     const aspect = root.clientWidth / root.clientHeight;
     const frustumSize = 2; // sahne boyuna göre ayarla
     const pos = camera.position.clone();
-    camera = new THREE.OrthographicCamera(
+    const target = controls?.target?.clone?.() || new THREE.Vector3(0, 0, 0);
+
+    const newCam = new THREE.OrthographicCamera(
         -frustumSize * aspect,
         frustumSize * aspect,
         frustumSize,
@@ -101,8 +124,13 @@ export function switchToOrthographic() {
         0.01,
         1000
     );
-    camera.position.copy(pos);
-    controls.object = camera;
-    controls.update();
+    newCam.position.copy(pos);
+
+    camera = newCam;
+    if (controls) {
+        controls.object = camera;
+        controls.target.copy(target);
+        controls.update();
+    }
     requestRender();
 }

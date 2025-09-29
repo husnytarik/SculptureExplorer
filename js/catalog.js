@@ -1,28 +1,37 @@
+// /js/catalog.js
 // @ts-nocheck
 import { badge, escapeHTML, flash } from './ui.js';
 
-export function initCatalog({ loadBtn, selectEl, previewEl, applyBtn, setModelUrl, loadByUrl, fillMeta, onLoaded, fileInput, loadFileBtn }) {
+export function initCatalog({
+    loadBtn, selectEl, previewEl, applyBtn,
+    setModelUrl, loadByUrl, fillMeta, onLoaded,
+    fileInput, loadFileBtn
+}) {
     let CATALOG = null;
 
-    async function tryFetch(url) {
-        const res = await fetch(url);
+    async function tryFetch(absUrl) {
+        const res = await fetch(absUrl, { cache: 'no-store' });
         if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
         const text = await res.text();
-        return parseCatalog(text, url);
+        return parseCatalog(text, absUrl);
     }
 
     function parseCatalog(text, originLabel) {
         let data;
         try { data = JSON.parse(text); }
         catch (e) { flash('catalog.json parse hatası: ' + e.message); throw e; }
-        if (!data || !Array.isArray(data.items)) { throw new Error('Geçersiz format: items[] yok.'); }
+
+        // Beklenen şema: { items: [ { title?, file, ... } ] }
+        if (!data || !Array.isArray(data.items)) {
+            throw new Error('Geçersiz format: items[] yok.');
+        }
         CATALOG = data;
 
-        let opts = '<option value=\"\">— Kayıt seç —</option>';
+        let opts = '<option value="">— Kayıt seç —</option>';
         for (let i = 0; i < CATALOG.items.length; i++) {
             const it = CATALOG.items[i];
             const label = escapeHTML(it.title || ('Kayıt ' + (i + 1)));
-            opts += '<option value=\"' + i + '\">' + label + '</option>';
+            opts += '<option value="' + i + '">' + label + '</option>';
         }
         selectEl.innerHTML = opts;
 
@@ -33,11 +42,16 @@ export function initCatalog({ loadBtn, selectEl, previewEl, applyBtn, setModelUr
 
     async function loadCatalog() {
         try {
-            await tryFetch('./catalog.json');
+            // js/ klasöründen bir üst klasöre çık → kökteki catalog.json
+            const u = new URL('../catalog.json', import.meta.url);
+            await tryFetch(u.href);
         } catch (e1) {
-            try { await tryFetch('/catalog.json'); }
-            catch (e2) {
-                flash('catalog.json bulunamadı. (./ veya /)\nDetay: ' + e2.message);
+            try {
+                // fallback: aynı klasörde (isteğe bağlı)
+                const u2 = new URL('./catalog.json', import.meta.url);
+                await tryFetch(u2.href);
+            } catch (e2) {
+                flash('catalog.json bulunamadı.\nDetay: ' + e2.message);
                 console.error(e1, e2);
             }
         }
@@ -46,8 +60,8 @@ export function initCatalog({ loadBtn, selectEl, previewEl, applyBtn, setModelUr
     function renderPreview() {
         const idx = +selectEl.value;
         if (!CATALOG || isNaN(idx)) { previewEl.textContent = ''; return; }
-        const it = CATALOG.items[idx];
 
+        const it = CATALOG.items[idx];
         const tags =
             (badge(it.category) || '') + ' ' +
             (badge(it.type) || '') + ' ' +
@@ -56,13 +70,18 @@ export function initCatalog({ loadBtn, selectEl, previewEl, applyBtn, setModelUr
             (badge(it.culture) || '') + ' ' +
             (badge(it.geo) || '');
 
-        const abs = escapeHTML((it.abstract || '').slice(0, 140)) + '…';
-        previewEl.innerHTML = tags + '<br><span class=\"muted\">' + abs + '</span>';
+        const abstract = (it.abstract || '');
+        const absShort = abstract.length > 140 ? (abstract.slice(0, 140) + '…') : abstract;
+
+        previewEl.innerHTML = tags + '<br><span class="muted">' + escapeHTML(absShort) + '</span>';
     }
 
     function applySelected() {
-        const idx = +selectEl.value; if (!CATALOG || isNaN(idx)) { flash('Kayıt seçiniz.'); return; }
+        const idx = +selectEl.value;
+        if (!CATALOG || isNaN(idx)) { flash('Kayıt seçiniz.'); return; }
         const it = CATALOG.items[idx];
+
+        // GLB/GLTF yolu
         if (setModelUrl) setModelUrl(it.file);
         if (loadByUrl) loadByUrl(it.file);
         if (fillMeta) fillMeta(it);
