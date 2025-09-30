@@ -38,8 +38,8 @@ function start() {
         modelUrl: must('modelUrl'),
         loadBtn: must('loadBtn'),
         screenshotBtn: must('screenshotBtn'),
-        localFile: must('localFile'),
-        loadLocal: must('loadLocal'),
+        localFile: document.getElementById('localFile'),
+        loadLocal: document.getElementById('loadLocal'),
         triCount: must('triCount'),
         bboxInfo: must('bboxInfo'),
         scaleInfo: must('scaleInfo'),
@@ -153,11 +153,18 @@ function start() {
 
     // Arka plan rengi
     const bgColor = document.getElementById('bgColor');
-    if (bgColor) bgColor.addEventListener('input', function () {
+    if (bgColor) {
+        bgColor.value = '#5a5a5a';       // default renk
         const c = new THREE.Color(bgColor.value);
         renderer.setClearColor(c, 1);
         requestRender();
-    });
+
+        bgColor.addEventListener('input', function () {
+            const c = new THREE.Color(bgColor.value);
+            renderer.setClearColor(c, 1);
+            requestRender();
+        });
+    }
 
     // Işık
     const lighting = initLighting({
@@ -251,12 +258,13 @@ function start() {
     // --- FOV / CAMERA MODE UI ---
     const fovSlider = document.getElementById('fovSlider');
     if (fovSlider) {
+        setFov(Number(fovSlider.value));
+        requestRender();
         fovSlider.addEventListener('input', () => {
-            setFov(Number(fovSlider.value)); // 20–120
+            setFov(Number(fovSlider.value));
             requestRender();
         });
     }
-
     const btnPerspective = document.getElementById('btnPerspective');
     if (btnPerspective) {
         btnPerspective.addEventListener('click', () => {
@@ -368,6 +376,53 @@ function start() {
         updateMeasureUI(els.measureMode.value || 'none');
     })();
 
+    // === Işık & Görünüm panel toggle (toolrail butonu ile) ===
+    const viewPanel = document.getElementById('viewPanel');
+    const btnViewPanel = document.getElementById('btnViewPanel');
+
+    // (Opsiyonel) Sidebar'daki alternatif butonu da desteklemek istersen:
+    const altToggleBtn = document.getElementById('toggleViewPanel');
+
+    function syncViewBtn() {
+        if (!btnViewPanel || !viewPanel) return;
+        const opened = !viewPanel.hidden;
+        btnViewPanel.classList.toggle('is-active', opened);
+        btnViewPanel.setAttribute('aria-pressed', opened ? 'true' : 'false');
+    }
+
+    function toggleViewPanel() {
+        if (!viewPanel) return;
+        viewPanel.hidden = !viewPanel.hidden;
+        syncViewBtn();
+        requestRender?.();
+    }
+
+    btnViewPanel?.addEventListener('click', toggleViewPanel);
+    altToggleBtn?.addEventListener('click', toggleViewPanel); // varsa
+
+    // ESC ile panel kapat
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && viewPanel && !viewPanel.hidden) {
+            viewPanel.hidden = true;
+            syncViewBtn();
+        }
+    });
+
+    // Panel dışına tıklayınca kapat (toggle butonu hariç)
+    document.addEventListener('mousedown', (e) => {
+        if (!viewPanel || viewPanel.hidden) return;
+        const inside = viewPanel.contains(e.target);
+        const onToggle = btnViewPanel?.contains(e.target) || altToggleBtn?.contains?.(e.target);
+        if (!inside && !onToggle) {
+            viewPanel.hidden = true;
+            syncViewBtn();
+        }
+    });
+
+    // İlk senkron
+    syncViewBtn();
+
+
     // ESC ile hızlı kapatma
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && (els.measureMode.value || 'none') !== 'none') {
@@ -406,13 +461,19 @@ function start() {
     });
 
     // MODEL
-    els.loadBtn.addEventListener('click', function () { loader.loadFromURL(els.modelUrl.value); });
-    els.loadLocal.addEventListener('click', function () {
-        const f = els.localFile.files && els.localFile.files[0];
-        if (!f) { flash('Bir .glb/.gltf dosyası seçin.'); return; }
-        loader.loadFromFile(f);
+    els.loadBtn?.addEventListener('click', function () {
+        loader.loadFromURL(els.modelUrl.value);
     });
-    els.screenshotBtn.addEventListener('click', function () {
+
+    if (els.loadLocal && els.localFile) {
+        els.loadLocal.addEventListener('click', function () {
+            const f = els.localFile.files && els.localFile.files[0];
+            if (!f) { flash('Bir .glb/.gltf dosyası seçin.'); return; }
+            loader.loadFromFile(f);
+        });
+    }
+
+    els.screenshotBtn?.addEventListener('click', function () {
         const a = document.createElement('a');
         a.href = renderer.domElement.toDataURL('image/png');
         a.download = 'screenshot.png';

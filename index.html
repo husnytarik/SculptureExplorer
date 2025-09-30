@@ -2,6 +2,7 @@
 <html lang="tr">
 
 <head>
+    <link rel="icon" href="data:,">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Sculpture Explorer — MVP</title>
@@ -43,6 +44,7 @@
                     </span>
                     <span class="toolbtn__label">Mesafe</span>
                 </button>
+
                 <button class="toolbtn" data-mode="polyline" aria-label="Yol Uzunluğu">
                     <span class="toolbtn__icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none">
@@ -56,6 +58,7 @@
                     </span>
                     <span class="toolbtn__label">Yol Uzunluğu</span>
                 </button>
+
                 <button class="toolbtn" data-mode="surface2" aria-label="Yüzey Mesafesi">
                     <span class="toolbtn__icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none">
@@ -67,6 +70,7 @@
                     </span>
                     <span class="toolbtn__label">Yüzey Mesafesi</span>
                 </button>
+
                 <button class="toolbtn" data-mode="surfacePath" aria-label="Yüzey Yol">
                     <span class="toolbtn__icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none">
@@ -80,6 +84,7 @@
                     </span>
                     <span class="toolbtn__label">Yüzey Yol</span>
                 </button>
+
                 <button class="toolbtn" data-mode="girth" aria-label="Kesit Çevresi">
                     <span class="toolbtn__icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none">
@@ -90,6 +95,75 @@
                     </span>
                     <span class="toolbtn__label">Kesit Çevresi</span>
                 </button>
+            </div>
+
+            <!-- Sağ üst aksiyonlar -->
+            <div class="viewer-actions">
+                <!-- Işık & Görünüm toggle (ghost toolbtn) -->
+                <button class="toolbtn" id="btnViewPanel" aria-label="Işık & Görünüm">
+                    <span class="toolbtn__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2" />
+                            <line x1="12" y1="2" x2="12" y2="5" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="2" y1="12" x2="5" y2="12" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="19" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="4.2" y1="4.2" x2="6.3" y2="6.3" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="17.7" y1="17.7" x2="19.8" y2="19.8" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="4.2" y1="19.8" x2="6.3" y2="17.7" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="17.7" y1="6.3" x2="19.8" y2="4.2" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </span>
+                    <span class="toolbtn__label">Işık & Görünüm</span>
+                </button>
+            </div>
+
+            <div class="view-panel" id="viewPanel" hidden>
+                <div class="row gap8">
+                    <button class="chip" id="btnPerspective" title="Perspective">Persp</button>
+                    <button class="chip" id="btnOrtho" title="Orthographic">Ortho</button>
+                    <label class="mini">FOV
+                        <input id="fovSlider" type="range" min="20" max="120" value="45">
+                    </label>
+                </div>
+
+                <div class="row gap8">
+                    <label class="mini">Azimut
+                        <input id="azimuth" type="range" min="0" max="360" value="45">
+                    </label>
+                    <label class="mini">Yükseklik
+                        <input id="elevation" type="range" min="0" max="89" value="35">
+                    </label>
+                </div>
+
+                <div class="row gap8">
+                    <label class="mini">Parlaklık
+                        <input id="intensity" type="range" min="0" max="1000" value="120">
+                    </label>
+                    <label class="mini">Arka Plan
+                        <input id="bgColor" type="color" value="#000000">
+                    </label>
+                </div>
+
+                <div class="row gap8 wrap">
+                    <label class="check mini">
+                        <input id="gridToggle" type="checkbox" checked><span>Grid</span>
+                    </label>
+                    <label class="check mini">
+                        <input id="dirOff" type="checkbox"><span>Directional kapalı</span>
+                    </label>
+                    <label class="check mini">
+                        <input id="grayscale" type="checkbox"><span>S/B</span>
+                    </label>
+                </div>
             </div>
 
             <!-- Ölçüm değerleri: viewer üzerinde -->
@@ -106,16 +180,17 @@
                     <div class="card">
                         <h3>Model</h3>
                         <div class="col">
-                            <!-- İsterseniz örnek URL: https://modelviewer.dev/shared-assets/models/Astronaut.glb -->
                             <input class="input" id="modelUrl" placeholder=".glb / .gltf URL" value="./models/sc.glb" />
                             <div class="grid">
                                 <button class="btn" id="loadBtn">URL'den Yükle</button>
                                 <button class="btn" id="screenshotBtn">PNG Kaydet</button>
                             </div>
+
+                            <!-- ▼ İSTENEN: Görünüm panelini aç/kapat butonu -->
                             <div class="grid">
-                                <input type="file" id="localFile" accept=".glb,.gltf,model/gltf-binary" class="input" />
-                                <button class="btn" id="loadLocal">Dosyadan Yükle</button>
+                                <button class="btn" id="toggleViewPanel">Işık & Görünüm Paneli</button>
                             </div>
+
                             <div class="stats">
                                 <div class="stat">
                                     <span class="stat__label">Üçgen</span>
@@ -179,59 +254,20 @@
                         </div>
                     </div>
 
-                    <!-- Ölçüm -->
-                    <div class="card">
-                        <h3>Ölçüm Araçları</h3>
-                        <div class="col">
-                            <!-- Dropdown DOM'da kalsın, JS için; görünmesin -->
-                            <select id="measureMode" class="select hide">
-                                <option value="none">— Seçiniz</option>
-                                <option value="distance">Mesafe (2 nokta)</option>
-                                <option value="polyline">Yol Uzunluğu (çok nokta)</option>
-                                <option value="surface2">Yüzey Mesafesi (2 nokta)</option>
-                                <option value="surfacePath">Yüzey Yol (çok nokta)</option>
-                                <option value="girth">Kesit Çevresi (β)</option>
-                            </select>
-
-                            <div class="grid">
-                                <button class="btn" id="clearMarks">İşaretleri Temizle</button>
-                                <button class="btn" id="exportCSV">CSV Dışa Aktar</button>
-                            </div>
-
-                            <div class="sep"></div>
-                            <div class="measure-readout measure-readout--panel" id="measureReadoutPanel">
-                                <span class="muted">Ölçüm</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Işık -->
-                    <div class="card">
-                        <h3>Işık & Görünüm</h3>
-                        <label>FOV
-                            <input id="fovSlider" type="range" min="20" max="120" value="45">
-                        </label>
-
-                        <button id="btnPerspective">Perspective</button>
-                        <button id="btnOrtho">Orthographic</button>
-                        <label class="row" style="gap:8px;">
-                            <input id="gridToggle" type="checkbox" checked> Grid görünsün
-                        </label>
-                        <label>Arka Plan
-                            <input id="bgColor" type="color" value="#000000" class="input" />
-                        </label>
-                        <div class="col">
-                            <label class="row" style="gap:8px;">
-                                <input id="dirOff" type="checkbox"> Directional kapalı
-                            </label>
-                            <label>Azimut (°) <input id="azimuth" type="range" min="0" max="360" value="45"
-                                    class="slider" /></label>
-                            <label>Yükseklik (°) <input id="elevation" type="range" min="0" max="89" value="35"
-                                    class="slider" /></label>
-                            <label>Parlaklık <input id="intensity" type="range" min="0" max="1000" value="120"
-                                    class="slider" /></label>
-                            <label><input id="grayscale" type="checkbox" /> Siyah-Beyaz filtre</label>
-                        </div>
+                    <!-- ÖLÇÜM ARAÇLARI KARTI KALDIRILDI -->
+                    <!-- ▼ Ama main.js 'must' ile bazı id'leri bekliyor.
+               Bu nedenle görünmeyen (hidden) minimal DOM'u tutuyoruz. -->
+                    <div class="hide" aria-hidden="true">
+                        <select id="measureMode">
+                            <option value="none">—</option>
+                            <option value="distance">distance</option>
+                            <option value="polyline">polyline</option>
+                            <option value="surface2">surface2</option>
+                            <option value="surfacePath">surfacePath</option>
+                            <option value="girth">girth</option>
+                        </select>
+                        <button id="clearMarks" type="button">clear</button>
+                        <button id="exportCSV" type="button">csv</button>
                     </div>
 
                     <!-- Filtreler -->
@@ -318,7 +354,21 @@
     <!-- Mobil için panel aç/kapat -->
     <button class="fab" id="toggleSidebar" aria-label="Panel">☰</button>
 
-    <!-- Entry module -->
+    <!-- View panel toggle wiring -->
+    <script>
+        (function () {
+            const fab = document.getElementById('viewFab');
+            const panel = document.getElementById('viewPanel');
+            const btn = document.getElementById('toggleViewPanel');
+
+            function togglePanel() { if (panel) panel.hidden = !panel.hidden; }
+
+            if (fab && panel) fab.addEventListener('click', togglePanel);
+            if (btn && panel) btn.addEventListener('click', togglePanel);
+        })();
+    </script>
+
+    <!-- Entry modules -->
     <script type="module" src="./js/rtiRaking.js"></script>
     <script type="module" src="./js/filters.js"></script>
     <script type="module" src="./js/main.js"></script>

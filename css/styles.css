@@ -1,31 +1,168 @@
+/* ================================
+   THEME TOKENS — tek noktadan kontrol
+   ================================ */
 :root {
-    --bg: #363636;
-    --panel: rgb(36, 36, 36);
-    --border: #313131;
-    --text: #808080;
-    --muted: #8a867e;
-    --accent: #523966;
-    --accent-2: #523966;
-    --ok: #3bb273;
-    --warn: #e4b649;
-    --err: #d65a5a;
+    /* Ana palet */
+    --bg: #444444;
+    /* sayfa arka planı — açık gri/beyaz */
+    --panel: #222222;
+    /* panel ve kart yüzeyi */
+    --surface: #ffffff;
+    /* input/kart içi beyaz */
+    --surface-2: #1f1f1f;
+    /* hafif gri yüzey */
+    --border: #22303d;
+    /* ince sınır */
 
-    /* kompakt UI boyutları */
-    --radius-ctrl: 6px;
+    --text: #bdbdbd;
+    /* ana metin koyu gri */
+    --text-strong: #ffffff;
+    /* başlık/metin vurgu */
+    --muted: #6b7280;
+    /* ikincil metin */
+
+    --accent: #3c5d5f;
+    /* modern mor vurgu */
+    --accent-2: #68afb3;
+
+    --ok: #16a34a;
+    /* yeşil onay */
+    --warn: #d97706;
+    /* turuncu uyarı */
+    --err: #dc2626;
+    /* kırmızı hata */
+
+    /* Nötr butonlar */
+    --btn-bg: #3c5d5f;
+    --btn-bg-hover: #22303d;
+    --btn-border: var(--border);
+    --btn-color: var(--text);
+
+    /* Kart/öğe */
+    --card-bg: var(--panel);
+    --item-bg: #222222;
+
+    /* FAB */
+    --fab-bg: #1f2937;
+    --fab-color: #f9fafb;
+
+    /* RGB tabanları (alpha’lı kullanımlar için) */
+    --black: 0, 0, 0;
+    --white: 255, 255, 255;
+
+    --accent-rgb: 124, 58, 237;
+    /**/
+
+    /* Viewer buton tinti (biraz renkli görünüm) */
+    --viewer-btn-bg: rgb(from var(--accent) r g b / .5);
+    --viewer-btn-bg-hover: rgb(from var(--accent-2) r g b / .16);
+    --viewer-btn-border: rgb(from var(--accent-2) r g b / .55);
+    --viewer-btn-active-bg: rgb(from var(--accent) r g b / .22);
+    --viewer-btn-active-col: var(--accent-2);
+
+    /* Işık & Görünüm paneli (açılır) */
+    --view-panel-bg: var(--panel);
+    /* solid açık kart */
+    --view-panel-border: var(--border);
+    --view-panel-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+    --view-panel-blur: 8px;
+
+    /* Durum & etkileşim renkleri */
+    --hover-surface: rgba(var(--black), 0.03);
+    --hover-surface-strong: rgba(var(--black), 0.06);
+    --focus-border: #6366f1;
+    /* odak hattı mor tabanlı */
+    --focus-ring: rgba(124, 58, 237, 0.25);
+    --placeholder: #9ca3af;
+
+    /* Viewer & overlay */
+    --viewer-bg: #000000;
+    --overlay-bg: rgba(var(--black), .55);
+    --overlay-bg-strong: rgba(var(--black), .8);
+    --overlay-border: #1f2937;
+    --pill-bg: rgba(var(--black), .5);
+
+    /* Toolrail / butonlar */
+    --tool-btn-bg: rgba(var(--black), .55);
+    --tool-btn-bg-hover: rgba(var(--black), .7);
+    --tool-btn-active-bg: var(--accent);
+    --tool-btn-active-border: var(--accent);
+    --tool-btn-color: #ffffff;
+    --tool-label-bg: rgba(var(--black), .8);
+    --tool-label-color: #ffffff;
+
+    /* Kontroller */
+    --ctrl-bg: var(--surface-2);
+    --ctrl-color: var(--text);
+    --ctrl-border: var(--border);
+    --ctrl-bg-file-btn: #f1f5f9;
+    --ctrl-bg-file-btn-hover: #e2e8f0;
+    --select-caret: #6b7280;
+    --range-track: #e5e7eb;
+
+
+
+    /* Ölçüm readout */
+    --measure-text: var(--text);
+    --measure-emph: var(--accent);
+
+    /* Kompakt UI boyutları */
+    --radius-ctrl: 100px;
     --radius-card: 8px;
     --h-ctrl: 32px;
     --pad-ctrl-x: 10px;
     --pad-btn-x: 12px;
-    --text-strong: #bdbdbd;
+
+    --view-panel-top: 56px;
+    --view-panel-right: 12px;
+    --view-panel-width: 320px;
+
+
+    /* === Font ailesi === */
+    --ff-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    --ff-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", monospace;
+
+    /* === Ağırlıklar === */
+    --fw-normal: 400;
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+
+    /* === Boyut ölçeği (typescale) === */
+    --fs-xs: 9px;
+    --fs-sm: 10px;
+    /* mevcut taban */
+    --fs-md: 12px;
+    --fs-lg: 14px;
+
+    /* === Satır yüksekliği === */
+    --lh-tight: 1.2;
+    --lh-normal: 1.45;
+    --lh-relaxed: 1.6;
 }
 
+:where(input, select, textarea, button, .btn) {
+    font-family: var(--ff-sans);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-tight);
+    font-weight: var(--fw-normal);
+}
+
+
+/* ================================
+   GENEL
+   ================================ */
 * {
     box-sizing: border-box;
 }
 
 body {
     margin: 0;
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    font-family: var(--ff-sans);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-normal);
     background: var(--bg);
     color: var(--text);
 }
@@ -44,7 +181,7 @@ body {
     border: 1px solid var(--border);
     border-radius: 16px;
     overflow: hidden;
-    background: #000;
+    background: var(--viewer-bg);
     height: calc(100vh - 20px);
 }
 
@@ -62,7 +199,6 @@ body {
     border-radius: 16px;
     padding: 10px;
     height: calc(100vh - 20px);
-    /* app padding 10px */
     display: flex;
     overflow-x: hidden;
 }
@@ -74,14 +210,12 @@ body {
     gap: 10px;
     width: 100%;
     overflow: auto;
-    /* yalnız panel scroll */
     padding-right: 6px;
-    /* scrollbar için nefes */
 }
 
 /* ===== Kart ===== */
 .card {
-    background: var(--panel);
+    background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
     padding: 10px 12px;
@@ -90,15 +224,15 @@ body {
 }
 
 .card:hover {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--hover-surface);
 }
 
 .card h2,
 .card h3 {
-    font-size: 12px;
+    font-size: var(--fs-sm);
     margin: 0 0 6px;
     color: var(--text);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
 }
 
 /* satır/sütun aralıkları */
@@ -117,9 +251,9 @@ body {
 /* ===== Form Kontrolleri — tek tip, kompakt ===== */
 :where(input[type="text"], input[type="number"], input[type="search"], input[type="password"], select, textarea) {
     height: var(--h-ctrl);
-    background: #0f0f0f;
-    color: var(--text-strong);
-    border: 1px solid var(--border);
+    background: var(--ctrl-bg);
+    color: var(--ctrl-color);
+    border: 1px solid var(--ctrl-border);
     border-radius: var(--radius-ctrl);
     padding: 0 var(--pad-ctrl-x);
     font-size: 12px;
@@ -133,20 +267,20 @@ textarea {
 }
 
 :where(input, select, textarea)::placeholder {
-    color: #7d7d7d;
+    color: var(--placeholder);
 }
 
 :where(input, select, textarea):focus {
-    border-color: #4a4a4a;
-    box-shadow: 0 0 0 2px rgba(82, 57, 102, .25);
+    border-color: var(--focus-border);
+    box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 /* select oku minimal */
 select {
     appearance: none;
     background-image:
-        linear-gradient(45deg, transparent 50%, #7a7a7a 50%),
-        linear-gradient(135deg, #7a7a7a 50%, transparent 50%);
+        linear-gradient(45deg, transparent 50%, var(--select-caret) 50%),
+        linear-gradient(135deg, var(--select-caret) 50%, transparent 50%);
     background-position: calc(100% - 18px) 52%, calc(100% - 12px) 52%;
     background-size: 6px 6px, 6px 6px;
     background-repeat: no-repeat;
@@ -155,8 +289,8 @@ select {
 
 /* file input */
 input[type="file"] {
-    background: #0f0f0f;
-    color: var(--text-strong);
+    background: var(--ctrl-bg);
+    color: var(--ctrl-color);
 }
 
 input[type="file"]::file-selector-button,
@@ -164,18 +298,18 @@ input[type="file"]::-webkit-file-upload-button {
     height: 28px;
     padding: 0 10px;
     margin-right: 10px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--ctrl-border);
     border-radius: var(--radius-ctrl);
-    background: #141414;
-    color: var(--text-strong);
+    background: var(--ctrl-bg-file-btn);
+    color: var(--ctrl-color);
     cursor: pointer;
     transition: background .15s, border-color .15s;
 }
 
 input[type="file"]::file-selector-button:hover,
 input[type="file"]::-webkit-file-upload-button:hover {
-    background: #161616;
-    border-color: #4a4a4a;
+    background: var(--ctrl-bg-file-btn-hover);
+    border-color: var(--focus-border);
 }
 
 /* checkbox/radio/slider */
@@ -186,7 +320,7 @@ input[type="radio"] {
 
 input[type="range"] {
     height: 8px;
-    background: #1a1a1a;
+    background: var(--range-track);
     border-radius: 4px;
     accent-color: var(--accent);
 }
@@ -212,28 +346,26 @@ button,
 .btn {
     height: var(--h-ctrl);
     padding: 0 var(--pad-btn-x);
-    font-size: 12px;
     line-height: 1;
     border-radius: var(--radius-ctrl);
-    background: #141414;
-    /* nötr */
-    color: var(--text-strong);
-    border: 1px solid var(--border);
+    background: var(--btn-bg);
+    color: var(--btn-color);
+    border: 1px solid var(--btn-border);
     cursor: pointer;
-    transition: background .15s, border-color .15s;
+    transition: background .15s, border-color .15s, filter .15s;
 }
 
 button:hover,
 .btn:hover {
-    background: #161616;
-    border-color: #4a4a4a;
+    background: var(--btn-bg-hover);
+    border-color: var(--focus-border);
 }
 
 .btn[aria-pressed="true"] {
     outline: 2px solid var(--accent);
 }
 
-/* aksiyon vurgusu gerekiyorsa */
+/* aksiyon vurgusu */
 button[data-variant="accent"],
 .btn[data-variant="accent"] {
     background: var(--accent);
@@ -242,11 +374,11 @@ button[data-variant="accent"],
 }
 
 button[data-variant="accent"]:hover,
-.btn[data-variant="accent"] {
+.btn[data-variant="accent"]:hover {
     filter: brightness(1.05);
 }
 
-/* min-height 44px ez */
+/* min-height ez */
 .btn,
 .input,
 .select {
@@ -259,7 +391,7 @@ button[data-variant="accent"]:hover,
     border: 1px solid var(--border);
     border-radius: 999px;
     color: #cbd5e1;
-    font-size: 11px;
+    font-size: var(--fs-xs);
 }
 
 .legend {
@@ -269,10 +401,10 @@ button[data-variant="accent"]:hover,
     display: flex;
     gap: 8px;
     align-items: center;
-    background: rgba(0, 0, 0, .45);
+    background: var(--overlay-bg);
     backdrop-filter: blur(6px);
     padding: 8px 10px;
-    border: 1px solid #111827;
+    border: 1px solid var(--overlay-border);
     border-radius: 12px;
 }
 
@@ -291,8 +423,8 @@ button[data-variant="accent"]:hover,
 }
 
 .pill {
-    background: rgba(0, 0, 0, .5);
-    border: 1px solid #111827;
+    background: var(--pill-bg);
+    border: 1px solid var(--overlay-border);
     padding: 8px 10px;
     border-radius: 999px;
     font-size: 12px;
@@ -320,12 +452,12 @@ button[data-variant="accent"]:hover,
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 8px;
-    background: #0b0f15;
+    background: var(--item-bg);
 }
 
 .item h4 {
     margin: 0 0 6px;
-    font-size: 13px;
+    font-size: var(--fs-md);
 }
 
 .sep {
@@ -344,18 +476,18 @@ canvas {
     pointer-events: none;
 }
 
-/* fab (değiştirmedik) */
+/* fab */
 .fab {
     position: fixed;
     right: max(12px, env(safe-area-inset-right));
     bottom: max(12px, env(safe-area-inset-bottom));
-    background: #111827;
+    background: var(--fab-bg);
     border: 1px solid var(--border);
-    color: #e5e7eb;
+    color: var(--fab-color);
     padding: 12px 14px;
     border-radius: 999px;
     font-size: 18px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+    box-shadow: 0 4px 16px rgba(var(--black), .35);
     z-index: 50;
     display: none;
 }
@@ -363,32 +495,26 @@ canvas {
 /* ——— Mobil düzen: sayfa scroll’u kilitli, sadece panel içi kayar ——— */
 @media (max-width: 1024px) {
 
-    /* 1) Sayfa yüksekliğini kilitle ve body scroll'u kapat */
     html,
     body {
         height: 100%;
         overflow: hidden;
     }
 
-    /* 2) Uygulama 100vh (veya modern tarayıcıda 100svh) kadar yer kaplasın */
     .app {
         grid-template-columns: 1fr;
         grid-template-rows: 56vh 1fr;
-        /* üstte viewer, altta panel kalan alanı alsın */
         height: 100vh;
         height: 100svh;
-        /* iOS/Android için daha doğru */
         padding: 10px;
         gap: 10px;
     }
 
-    /* 3) Viewer kendi satırında tam yükseklik; min-height sınırlamasını kaldır */
     .viewer {
         height: 100%;
         min-height: 0;
     }
 
-    /* 4) Panel satırı: tüm kalan alanı kapla; scroll sadece içeride */
     .sidebar {
         min-height: 0;
     }
@@ -402,18 +528,14 @@ canvas {
         flex: 1;
         min-height: 0;
         overflow-y: auto;
-        /* ← yalnız panel içinde kaydır */
         overflow-x: hidden;
         padding-right: 6px;
-        /* scrollbar payı */
     }
 
-    /* 5) Mobilde kart gridleri tek sütun */
     .grid {
         grid-template-columns: 1fr;
     }
 
-    /* 6) Küçük dokunuşlar */
     .legend {
         left: 8px;
         bottom: 8px;
@@ -447,7 +569,6 @@ canvas {
         min-height: 320px;
     }
 
-    /* panel mobilde de kendi içinde scroll */
     .sidepanel {
         height: auto;
     }
@@ -477,21 +598,20 @@ canvas {
    Ölçüm çıktıları: overlay & panel varyantları
    ========================================================= */
 .measure-readout {
-    font-size: 12px;
-    color: #fff;
+    font-size: var(--fs-sm);
+    color: var(--measure-text);
 }
 
 .measure-readout b {
-    color: var(--accent);
+    color: var(--measure-emph);
 }
 
 /* Viewer üstü (konumlu) */
 .measure-readout--overlay {
     position: absolute;
     bottom: 10px;
-    /* legend gibi altta */
     left: 10px;
-    background: rgba(0, 0, 0, 0.55);
+    background: var(--overlay-bg);
     backdrop-filter: blur(6px);
     padding: 6px 10px;
     border: 1px solid var(--border);
@@ -516,8 +636,6 @@ canvas {
     display: none !important;
 }
 
-/* dropdown'ı gizlemek için */
-
 .toolrail {
     position: absolute;
     top: 50%;
@@ -528,7 +646,6 @@ canvas {
     gap: 8px;
     z-index: 30;
     pointer-events: auto;
-    /* overlay pointer-events: none'dan etkilenmesin */
 }
 
 .toolbtn {
@@ -536,17 +653,13 @@ canvas {
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: rgba(0, 0, 0, .55);
+    background: var(--tool-btn-bg);
     border: 1px solid var(--border);
-    color: #fff;
+    color: var(--tool-btn-color);
     display: flex;
-    /* ← grid yerine flex */
     align-items: center;
-    /* dikey merkez */
     justify-content: center;
-    /* yatay merkez */
     padding: 0;
-    /* ← UA padding reset */
     box-sizing: border-box;
     -webkit-appearance: none;
     appearance: none;
@@ -554,13 +667,13 @@ canvas {
 
 .toolbtn:hover,
 .toolbtn:focus {
-    background: rgba(0, 0, 0, .7);
-    border-color: #4a4a4a;
+    background: var(--tool-btn-bg-hover);
+    border-color: var(--focus-border);
 }
 
 .toolbtn.is-active {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--tool-btn-active-bg);
+    border-color: var(--tool-btn-active-border);
     color: #fff;
 }
 
@@ -569,26 +682,21 @@ canvas {
     height: 20px;
     display: block;
     line-height: 0;
-    /* inline boşluğu kapat */
     font-size: 0;
-    /* metin metriki olmasın */
     letter-spacing: 0;
-    /* önceki .2px etkisini kaldır */
     font-weight: 400;
 }
 
-/* Hover/focus olunca sola doğru isim şerit gibi açılsın */
 .toolbtn__label {
     position: absolute;
     right: 44px;
-    /* butonun soluna hizalanır */
     top: 50%;
     transform: translateY(-50%) translateX(8px);
     opacity: 0;
     pointer-events: none;
-    background: rgba(0, 0, 0, .8);
+    background: var(--tool-label-bg);
     border: 1px solid var(--border);
-    color: #fff;
+    color: var(--tool-label-color);
     padding: 6px 8px;
     border-radius: 8px;
     font-size: 12px;
@@ -602,7 +710,6 @@ canvas {
     transform: translateY(-50%) translateX(0);
 }
 
-/* Mobil ayarı: ray aşağı, etiketler focus ile görünür */
 @media (max-width:1024px) {
     .toolrail {
         top: auto;
@@ -626,7 +733,6 @@ canvas {
 .stats {
     display: grid;
     grid-template-columns: 1fr;
-    /* her zaman tek sütun */
     gap: 6px;
 }
 
@@ -636,36 +742,156 @@ canvas {
     align-items: center;
     gap: 8px;
     padding: 8px 10px;
-    background: #0f0f0f;
+    background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: 10px;
 }
 
 .stat__label {
-    font-size: 11px;
+    font-size: var(--fs-xs);
     color: var(--muted);
     min-width: 64px;
-    /* hizalama için sabit etiket genişliği */
     flex-shrink: 0;
 }
 
 .stat__value {
     flex: 1 1 auto;
-    /* değerin alanı esnesin */
     min-width: 0;
-    /* ellipsis çalışsın */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 12px;
+    font-size: var(--fs-sm);
     color: var(--text-strong);
     font-variant-numeric: tabular-nums;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-family: var(--ff-mono);
 }
 
 .stat__unit {
     margin-left: 8px;
-    font-size: 11px;
+    font-size: var(--fs-sm);
     color: var(--muted);
     flex-shrink: 0;
+}
+
+/* ========= Model Viewer içi Floating View Panel ========= */
+.view-fab {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .15);
+    cursor: pointer;
+    z-index: 5;
+}
+
+.view-fab svg {
+    width: 22px;
+    height: 22px;
+    stroke: var(--text);
+    fill: none;
+    stroke-width: 1.8;
+}
+
+.view-fab circle {
+    fill: var(--text);
+    stroke: none;
+}
+
+.view-panel {
+    position: absolute;
+    top: var(--view-panel-top);
+    right: var(--view-panel-right);
+    background: var(--view-panel-bg);
+    border: 1px solid var(--view-panel-border);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: min(var(--view-panel-width), 36vw);
+    box-shadow: var(--view-panel-shadow);
+    backdrop-filter: blur(var(--view-panel-blur));
+    -webkit-backdrop-filter: blur(var(--view-panel-blur));
+    z-index: 35;
+}
+
+.view-panel[hidden] {
+    display: none !important;
+}
+
+.view-panel[hidden] {
+    display: none !important;
+}
+
+
+.view-panel .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.view-panel .wrap {
+    flex-wrap: wrap;
+}
+
+.view-panel .mini {
+    font-size: var(--fs-sm);
+    color: var(--text);
+}
+
+.view-panel input[type="range"] {
+    width: 140px;
+}
+
+.view-panel .chip {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+}
+
+.view-panel .check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.viewer-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 36;
+    /* toolrail(30) ve panel(35) üstü */
+    display: flex;
+    gap: 8px;
+}
+
+/* Viewer içindeki toolbtn'ler */
+.viewer .toolbtn {
+    background: var(--viewer-btn-bg);
+    color: var(--tool-btn-color);
+    border: 1px solid var(--viewer-btn-border);
+    box-shadow: none;
+}
+
+.viewer .toolbtn:hover,
+.viewer .toolbtn:focus {
+    background: var(--viewer-btn-bg-hover);
+    border-color: var(--focus-border);
+}
+
+.viewer .toolbtn.is-active {
+    background: var(--viewer-btn-active-bg);
+    border-color: var(--viewer-btn-active-col);
+    color: var(--viewer-btn-active-col);
 }
