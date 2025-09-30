@@ -1,14 +1,22 @@
 :root {
-    --bg: #0b0e11;
-    --panel: #12161c;
-    --border: #1f2937;
-    --text: #e5e7eb;
-    --muted: #9ca3af;
-    --accent: #22d3ee;
-    --accent-2: #a78bfa;
-    --ok: #34d399;
-    --warn: #fbbf24;
-    --err: #ef4444;
+    --bg: #0a0a0a;
+    --panel: #0a0a0a;
+    --border: #313131;
+    --text: #808080;
+    --muted: #8a867e;
+    --accent: #523966;
+    --accent-2: #523966;
+    --ok: #3bb273;
+    --warn: #e4b649;
+    --err: #d65a5a;
+
+    /* kompakt UI boyutları */
+    --radius-ctrl: 6px;
+    --radius-card: 8px;
+    --h-ctrl: 32px;
+    --pad-ctrl-x: 10px;
+    --pad-btn-x: 12px;
+    --text-strong: #bdbdbd;
 }
 
 * {
@@ -22,6 +30,7 @@ body {
     color: var(--text);
 }
 
+/* ===== Layout ===== */
 .app {
     display: grid;
     grid-template-columns: 1fr 360px;
@@ -36,75 +45,219 @@ body {
     border-radius: 16px;
     overflow: hidden;
     background: #000;
+    height: calc(100vh - 20px);
 }
 
+/* sağ kolon */
 .sidebar {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.card {
+/* panel + iç scroll */
+.sidepanel {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 12px;
+    padding: 10px;
+    height: calc(100vh - 20px);
+    /* app padding 10px */
+    display: flex;
+    overflow-x: hidden;
 }
 
+.sidepanel__body {
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    overflow: auto;
+    /* yalnız panel scroll */
+    padding-right: 6px;
+    /* scrollbar için nefes */
+}
+
+/* ===== Kart ===== */
+.card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 10px 12px;
+    box-shadow: none;
+    transition: background .15s;
+}
+
+.card:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.card h2,
 .card h3 {
-    margin: 0 0 10px;
-    font-size: 14px;
-    letter-spacing: .2px;
-    color: #cbd5e1;
+    font-size: 12px;
+    margin: 0 0 6px;
+    color: var(--text);
+    font-weight: 600;
 }
 
+/* satır/sütun aralıkları */
 .row {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
 }
 
 .col {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
-.btn {
-    background: #111827;
+/* ===== Form Kontrolleri — tek tip, kompakt ===== */
+:where(input[type="text"], input[type="number"], input[type="search"], input[type="password"], select, textarea) {
+    height: var(--h-ctrl);
+    background: #0f0f0f;
+    color: var(--text-strong);
     border: 1px solid var(--border);
-    color: #e5e7eb;
-    padding: 8px 10px;
-    border-radius: 10px;
+    border-radius: var(--radius-ctrl);
+    padding: 0 var(--pad-ctrl-x);
+    font-size: 12px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+}
+
+textarea {
+    min-height: 84px;
+    padding: 8px var(--pad-ctrl-x);
+}
+
+:where(input, select, textarea)::placeholder {
+    color: #7d7d7d;
+}
+
+:where(input, select, textarea):focus {
+    border-color: #4a4a4a;
+    box-shadow: 0 0 0 2px rgba(82, 57, 102, .25);
+}
+
+/* select oku minimal */
+select {
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #7a7a7a 50%),
+        linear-gradient(135deg, #7a7a7a 50%, transparent 50%);
+    background-position: calc(100% - 18px) 52%, calc(100% - 12px) 52%;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 30px;
+}
+
+/* file input */
+input[type="file"] {
+    background: #0f0f0f;
+    color: var(--text-strong);
+}
+
+input[type="file"]::file-selector-button,
+input[type="file"]::-webkit-file-upload-button {
+    height: 28px;
+    padding: 0 10px;
+    margin-right: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-ctrl);
+    background: #141414;
+    color: var(--text-strong);
     cursor: pointer;
+    transition: background .15s, border-color .15s;
 }
 
-.btn:hover {
-    border-color: #2a364a;
+input[type="file"]::file-selector-button:hover,
+input[type="file"]::-webkit-file-upload-button:hover {
+    background: #161616;
+    border-color: #4a4a4a;
 }
 
-.btn[aria-pressed="true"] {
-    outline: 2px solid var(--accent);
+/* checkbox/radio/slider */
+input[type="checkbox"],
+input[type="radio"] {
+    accent-color: var(--accent);
 }
 
+input[type="range"] {
+    height: 8px;
+    background: #1a1a1a;
+    border-radius: 4px;
+    accent-color: var(--accent);
+}
+
+/* genel input/select sınıflarınla uyum */
 .select,
 .input {
-    background: #0d1117;
-    color: #e5e7eb;
+    background: #0f0f0f;
+    color: var(--text-strong);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 8px 10px;
+    border-radius: var(--radius-ctrl);
+    padding: 0 var(--pad-ctrl-x);
     width: 100%;
+    height: var(--h-ctrl);
 }
 
 .slider {
     width: 100%;
 }
 
+/* ===== Butonlar — nötr & küçük ===== */
+button,
+.btn {
+    height: var(--h-ctrl);
+    padding: 0 var(--pad-btn-x);
+    font-size: 12px;
+    line-height: 1;
+    border-radius: var(--radius-ctrl);
+    background: #141414;
+    /* nötr */
+    color: var(--text-strong);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+
+button:hover,
+.btn:hover {
+    background: #161616;
+    border-color: #4a4a4a;
+}
+
+.btn[aria-pressed="true"] {
+    outline: 2px solid var(--accent);
+}
+
+/* aksiyon vurgusu gerekiyorsa */
+button[data-variant="accent"],
+.btn[data-variant="accent"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+button[data-variant="accent"]:hover,
+.btn[data-variant="accent"] {
+    filter: brightness(1.05);
+}
+
+/* min-height 44px ez */
+.btn,
+.input,
+.select {
+    min-height: var(--h-ctrl) !important;
+}
+
+/* ===== Küçük öğeler ===== */
 .badge {
     padding: 2px 8px;
     border: 1px solid var(--border);
-    border-radius: 100px;
+    border-radius: 999px;
     color: #cbd5e1;
     font-size: 11px;
 }
@@ -185,20 +338,13 @@ canvas {
     display: block;
 }
 
-
 /* Mobile friendliness */
 .overlay,
 .legend {
     pointer-events: none;
 }
 
-.btn,
-.input,
-.select {
-    min-height: 44px;
-}
-
-
+/* fab (değiştirmedik) */
 .fab {
     position: fixed;
     right: max(12px, env(safe-area-inset-right));
@@ -220,7 +366,6 @@ canvas {
     }
 }
 
-
 .sidebar-hidden .sidebar {
     display: none;
 }
@@ -233,7 +378,7 @@ canvas {
     height: calc(100vh - 20px);
 }
 
-
+/* ===== Responsive ===== */
 @media (max-width: 1024px) {
     .app {
         grid-template-columns: 1fr;
@@ -248,7 +393,12 @@ canvas {
         min-height: 320px;
     }
 
-    .sidebar {
+    /* panel mobilde de kendi içinde scroll */
+    .sidepanel {
+        height: auto;
+    }
+
+    .sidepanel__body {
         max-height: calc(44vh - 10px);
         overflow: auto;
     }
@@ -267,4 +417,201 @@ canvas {
     .viewer {
         height: 60vh;
     }
+}
+
+/* =========================================================
+   Ölçüm çıktıları: overlay & panel varyantları
+   ========================================================= */
+.measure-readout {
+    font-size: 12px;
+    color: #fff;
+}
+
+.measure-readout b {
+    color: var(--accent);
+}
+
+/* Viewer üstü (konumlu) */
+.measure-readout--overlay {
+    position: absolute;
+    bottom: 10px;
+    /* legend gibi altta */
+    left: 10px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    z-index: 20;
+    max-width: 240px;
+}
+
+/* Panel içi (konumsuz, sade) */
+.measure-readout--panel {
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 6px 8px;
+    color: var(--text);
+}
+
+/* =========================================================
+   Sağ dikey araç çubuğu (toolrail)
+   ========================================================= */
+.hide {
+    display: none !important;
+}
+
+/* dropdown'ı gizlemek için */
+
+.toolrail {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 30;
+    pointer-events: auto;
+    /* overlay pointer-events: none'dan etkilenmesin */
+}
+
+.toolbtn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, .55);
+    border: 1px solid var(--border);
+    color: #fff;
+    display: flex;
+    /* ← grid yerine flex */
+    align-items: center;
+    /* dikey merkez */
+    justify-content: center;
+    /* yatay merkez */
+    padding: 0;
+    /* ← UA padding reset */
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.toolbtn:hover,
+.toolbtn:focus {
+    background: rgba(0, 0, 0, .7);
+    border-color: #4a4a4a;
+}
+
+.toolbtn.is-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.toolbtn__icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    line-height: 0;
+    /* inline boşluğu kapat */
+    font-size: 0;
+    /* metin metriki olmasın */
+    letter-spacing: 0;
+    /* önceki .2px etkisini kaldır */
+    font-weight: 400;
+}
+
+/* Hover/focus olunca sola doğru isim şerit gibi açılsın */
+.toolbtn__label {
+    position: absolute;
+    right: 44px;
+    /* butonun soluna hizalanır */
+    top: 50%;
+    transform: translateY(-50%) translateX(8px);
+    opacity: 0;
+    pointer-events: none;
+    background: rgba(0, 0, 0, .8);
+    border: 1px solid var(--border);
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    transition: opacity .15s, transform .15s;
+}
+
+.toolbtn:hover .toolbtn__label,
+.toolbtn:focus .toolbtn__label {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+/* Mobil ayarı: ray aşağı, etiketler focus ile görünür */
+@media (max-width:1024px) {
+    .toolrail {
+        top: auto;
+        bottom: 10px;
+        transform: none;
+    }
+
+    .toolbtn:focus .toolbtn__label {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+}
+
+.toolbtn__icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* --- Mini istatistikler: DİKEY (alt alta) düzen --- */
+.stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    /* her zaman tek sütun */
+    gap: 6px;
+}
+
+.stat {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: #0f0f0f;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.stat__label {
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 64px;
+    /* hizalama için sabit etiket genişliği */
+    flex-shrink: 0;
+}
+
+.stat__value {
+    flex: 1 1 auto;
+    /* değerin alanı esnesin */
+    min-width: 0;
+    /* ellipsis çalışsın */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    color: var(--text-strong);
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.stat__unit {
+    margin-left: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    flex-shrink: 0;
 }

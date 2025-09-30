@@ -11,14 +11,13 @@
 
     <!-- three.js import map -->
     <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
-    "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+      "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+    }
   }
-}
-</script>
-
+  </script>
 </head>
 
 <body>
@@ -28,215 +27,293 @@
         <!-- ===== VIEWER ===== -->
         <div class="viewer" id="viewer">
             <div class="overlay">
-                <span class="pill" id="hudMode">Mod: Gezinti</span>
-                <span class="pill" id="hudHelp">Sol tık: nokta seç · Sağ tık: temizle · Orta: sürükle/zoom</span>
+                <span class="pill" id="hudMode">Model Görüntüleme ve Ölçüm</span>
             </div>
-            <div class="legend">
-                <span class="dot" style="background:#60a5fa"></span><span class="badge">Ölçüm noktası</span>
-                <span class="dot" style="background:#34d399"></span><span class="badge">Merkez (kesit)</span>
+
+            <!-- Sağ dikey araç çubuğu -->
+            <div class="toolrail" id="measureRail">
+                <button class="toolbtn" data-mode="distance" aria-label="Mesafe">
+                    <span class="toolbtn__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="6" cy="18" r="2" fill="currentColor" />
+                            <circle cx="18" cy="6" r="2" fill="currentColor" />
+                            <line x1="8.5" y1="15.5" x2="15.5" y2="8.5" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </span>
+                    <span class="toolbtn__label">Mesafe</span>
+                </button>
+                <button class="toolbtn" data-mode="polyline" aria-label="Yol Uzunluğu">
+                    <span class="toolbtn__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <polyline points="4,16 10,10 16,14 20,8" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <circle cx="4" cy="16" r="2" fill="currentColor" />
+                            <circle cx="10" cy="10" r="2" fill="currentColor" />
+                            <circle cx="16" cy="14" r="2" fill="currentColor" />
+                            <circle cx="20" cy="8" r="2" fill="currentColor" />
+                        </svg>
+                    </span>
+                    <span class="toolbtn__label">Yol Uzunluğu</span>
+                </button>
+                <button class="toolbtn" data-mode="surface2" aria-label="Yüzey Mesafesi">
+                    <span class="toolbtn__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="5" cy="17" r="2" fill="currentColor" />
+                            <circle cx="19" cy="7" r="2" fill="currentColor" />
+                            <path d="M7 15 C 10 6, 14 20, 17 9" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </span>
+                    <span class="toolbtn__label">Yüzey Mesafesi</span>
+                </button>
+                <button class="toolbtn" data-mode="surfacePath" aria-label="Yüzey Yol">
+                    <span class="toolbtn__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 16 C 8 8, 12 18, 16 10 S 20 7, 20 8" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" fill="none" />
+                            <circle cx="4" cy="16" r="2" fill="currentColor" />
+                            <circle cx="10" cy="13" r="1.8" fill="currentColor" />
+                            <circle cx="15" cy="11" r="1.8" fill="currentColor" />
+                            <circle cx="20" cy="8" r="2" fill="currentColor" />
+                        </svg>
+                    </span>
+                    <span class="toolbtn__label">Yüzey Yol</span>
+                </button>
+                <button class="toolbtn" data-mode="girth" aria-label="Kesit Çevresi">
+                    <span class="toolbtn__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-dasharray="3 2" fill="none" />
+                            <circle cx="12" cy="12" r="2" fill="currentColor" />
+                        </svg>
+                    </span>
+                    <span class="toolbtn__label">Kesit Çevresi</span>
+                </button>
+            </div>
+
+            <!-- Ölçüm değerleri: viewer üzerinde -->
+            <div class="measure-readout measure-readout--overlay" id="measureReadoutOverlay">
+                <span class="muted">Ölçüm</span>
             </div>
         </div>
 
         <!-- ===== SIDEBAR ===== -->
         <div class="sidebar">
-            <!-- Model -->
-            <div class="card">
-                <h3>Model</h3>
-                <div class="col">
-                    <!-- İsterseniz örnek URL: https://modelviewer.dev/shared-assets/models/Astronaut.glb -->
-                    <input class="input" id="modelUrl" placeholder=".glb / .gltf URL" value="./models/sc.glb" />
-                    <div class="grid">
-                        <button class="btn" id="loadBtn">URL'den Yükle</button>
-                        <button class="btn" id="screenshotBtn">PNG Kaydet</button>
-                    </div>
-                    <div class="grid">
-                        <input type="file" id="localFile" accept=".glb,.gltf,model/gltf-binary" class="input" />
-                        <button class="btn" id="loadLocal">Dosyadan Yükle</button>
-                    </div>
-                    <div class="row" style="justify-content:space-between">
-                        <span class="badge">Üçgen sayısı: <span id="triCount">-</span></span>
-                        <span class="badge">Boyut: <span id="bboxInfo">-</span></span>
-                        <span class="badge">Ölçek (m/birim): <span id="scaleInfo">1.000</span></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Ölçek & Birimler -->
-            <div class="card">
-                <h3>Ölçek & Birimler</h3>
-                <div class="col">
-                    <div class="grid">
-                        <select id="unitSelect" class="select">
-                            <option value="m">Metre (m)</option>
-                            <option value="cm">Santimetre (cm)</option>
-                            <option value="mm">Milimetre (mm)</option>
-                            <option value="ft">Feet (ft)</option>
-                            <option value="in">İnç (in)</option>
-                            <option value="custom">Özel (m/birim)</option>
-                        </select>
-                        <input class="input" id="metersPerUnit" type="number" step="any" value="1"
-                            placeholder="m/birim" />
-                    </div>
-                    <div class="grid">
-                        <input class="input" id="calReal" type="number" step="any"
-                            placeholder="Gerçek uzunluk (metre)" />
-                        <button class="btn" id="btnCalFromLast">Son ölçümle kalibre et</button>
-                    </div>
-                    <span class="muted" style="font-size:12px">İpucu: Önce iki nokta ölçün, sonra gerçek uzunluğu (m)
-                        girip kalibre edin.</span>
-                </div>
-            </div>
-
-            <!-- Katalog -->
-            <div class="card">
-                <h3>Koleksiyon (catalog.json)</h3>
-                <div class="col">
-                    <div class="grid">
-                        <button class="btn" id="loadCatalog">Sunucudan Yükle</button>
-                        <button class="btn" id="applyMeta">Seçileni Uygula</button>
-                    </div>
-                    <div class="grid">
-                        <input type="file" id="catalogFile" accept=".json" class="input" />
-                        <button class="btn" id="loadCatalogFile">Dosyadan Katalog</button>
-                    </div>
-                    <select id="catalogSelect" class="select">
-                        <option value="">— Kayıt seç —</option>
-                    </select>
-                    <div id="catalogPreview" class="muted" style="font-size:12px"></div>
-                </div>
-            </div>
-
-            <!-- Ölçüm -->
-            <div class="card">
-                <h3>Ölçüm Araçları</h3>
-                <div class="col">
-                    <select id="measureMode" class="select">
-                        <option value="none">— Seçiniz</option>
-                        <option value="distance">Mesafe (2 nokta)</option>
-                        <option value="polyline">Yol Uzunluğu (çok nokta)</option>
-                        <option value="surface2">Yüzey Mesafesi (2 nokta)</option>
-                        <option value="surfacePath">Yüzey Yol (çok nokta)</option>
-                        <option value="girth">Kesit Çevresi (β)</option>
-                    </select>
-                    <div class="grid">
-                        <button class="btn" id="clearMarks">İşaretleri Temizle</button>
-                        <button class="btn" id="exportCSV">CSV Dışa Aktar</button>
-                    </div>
-                    <div class="sep"></div>
-                    <div class="col" id="measureReadout">
-                        <span class="muted">Sonuçlar burada görünecek…</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Işık -->
-            <div class="card">
-                <h3>Işık & Görünüm</h3>
-                <label>FOV
-                    <input id="fovSlider" type="range" min="20" max="120" value="45">
-                </label>
-
-                <button id="btnPerspective">Perspective</button>
-                <button id="btnOrtho">Orthographic</button>
-                <label class="row" style="gap:8px;">
-                    <input id="gridToggle" type="checkbox" checked> Grid görünsün
-                </label>
-                <label>Arka Plan
-                    <input id="bgColor" type="color" value="#000000" class="input" />
-                </label>
-                <div class="col">
-                    <label class="row" style="gap:8px;">
-                        <input id="dirOff" type="checkbox"> Directional kapalı
-                    </label>
-                    <label>Azimut (°) <input id="azimuth" type="range" min="0" max="360" value="45"
-                            class="slider" /></label>
-                    <label>Yükseklik (°) <input id="elevation" type="range" min="0" max="89" value="35"
-                            class="slider" /></label>
-                    <label>Parlaklık <input id="intensity" type="range" min="0" max="1000" value="120"
-                            class="slider" /></label>
-                    <label><input id="grayscale" type="checkbox" /> Siyah-Beyaz filtre</label>
-                </div>
-            </div>
-
-            <!-- Filtreler -->
-            <div class="card">
-                <h3>Filtreler</h3>
-
-                <div class="col">
-                    <div class="grid">
-                        <!-- RTI / Raking Light -->
-                        <div class="fx-group">
-                            <label><input type="checkbox" id="fxRaking"> Raking Light (RTI)</label>
-                            <div style="margin-left:1em;">
-                                <label>Gain <input id="rGain" type="range" min="0.5" max="3" step="0.1"
-                                        value="1.2"></label>
-                                <label>Wrap <input id="rWrap" type="range" min="0" max="0.6" step="0.05"
-                                        value="0.3"></label>
+            <div class="sidepanel">
+                <div class="sidepanel__body">
+                    <!-- Model -->
+                    <div class="card">
+                        <h3>Model</h3>
+                        <div class="col">
+                            <!-- İsterseniz örnek URL: https://modelviewer.dev/shared-assets/models/Astronaut.glb -->
+                            <input class="input" id="modelUrl" placeholder=".glb / .gltf URL" value="./models/sc.glb" />
+                            <div class="grid">
+                                <button class="btn" id="loadBtn">URL'den Yükle</button>
+                                <button class="btn" id="screenshotBtn">PNG Kaydet</button>
+                            </div>
+                            <div class="grid">
+                                <input type="file" id="localFile" accept=".glb,.gltf,model/gltf-binary" class="input" />
+                                <button class="btn" id="loadLocal">Dosyadan Yükle</button>
+                            </div>
+                            <div class="stats">
+                                <div class="stat">
+                                    <span class="stat__label">Üçgen</span>
+                                    <span class="stat__value" id="triCount">-</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat__label">Boyut</span>
+                                    <span class="stat__value" id="bboxInfo">-</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat__label">Ölçek</span>
+                                    <span class="stat__value" id="scaleInfo">1.000</span>
+                                    <span class="stat__unit">m/birim</span>
+                                </div>
                             </div>
                         </div>
-                        <label class="row" style="gap:8px;"><input type="checkbox" id="fxSsao"> SSAO (ortam
-                            gölgeleme)</label>
-                        <div class="grid">
-                            <label class="row" style="gap:8px;"><input type="checkbox" id="fxCurv"> Curvature
-                                (Cavity)</label>
-                            <label>Güç <input type="range" id="fxCurvAmt" class="slider" min="0.01" max="200"
-                                    value="80"></label>
+                    </div>
+
+                    <!-- Ölçek & Birimler -->
+                    <div class="card">
+                        <h3>Ölçek & Birimler</h3>
+                        <div class="col">
+                            <div class="grid">
+                                <select id="unitSelect" class="select">
+                                    <option value="m">Metre (m)</option>
+                                    <option value="cm">Santimetre (cm)</option>
+                                    <option value="mm">Milimetre (mm)</option>
+                                    <option value="ft">Feet (ft)</option>
+                                    <option value="in">İnç (in)</option>
+                                    <option value="custom">Özel (m/birim)</option>
+                                </select>
+                                <input class="input" id="metersPerUnit" type="number" step="any" value="1"
+                                    placeholder="m/birim" />
+                            </div>
+                            <div class="grid">
+                                <input class="input" id="calReal" type="number" step="any"
+                                    placeholder="Gerçek uzunluk (metre)" />
+                                <button class="btn" id="btnCalFromLast">Son ölçümle kalibre et</button>
+                            </div>
+                            <span class="muted" style="font-size:12px">İpucu: Önce iki nokta ölçün, sonra gerçek
+                                uzunluğu (m) girip kalibre edin.</span>
                         </div>
+                    </div>
 
-                        <label class="row" style="gap:8px;"><input type="checkbox" id="fxEdges"> Kenar Vurgusu
-                            (Sobel)</label>
+                    <!-- Katalog -->
+                    <div class="card">
+                        <h3>Koleksiyon (catalog.json)</h3>
+                        <div class="col">
+                            <div class="grid">
+                                <button class="btn" id="loadCatalog">Sunucudan Yükle</button>
+                                <button class="btn" id="applyMeta">Seçileni Uygula</button>
+                            </div>
+                            <div class="grid">
+                                <input type="file" id="catalogFile" accept=".json" class="input" />
+                                <button class="btn" id="loadCatalogFile">Dosyadan Katalog</button>
+                            </div>
+                            <select id="catalogSelect" class="select">
+                                <option value="">— Kayıt seç —</option>
+                            </select>
+                            <div id="catalogPreview" class="muted" style="font-size:12px"></div>
+                        </div>
                     </div>
-                    <div class="grid">
-                        <select id="fxQuality" class="select">
-                            <option value="low">Kalite: Düşük (mobil)</option>
-                            <option value="high" selected>Kalite: Yüksek</option>
-                        </select>
-                        <button class="btn" id="btnRaking">Raking Işık (preset)</button>
-                        <button class="btn" id="btnFxReset">Filtreleri Sıfırla</button>
+
+                    <!-- Ölçüm -->
+                    <div class="card">
+                        <h3>Ölçüm Araçları</h3>
+                        <div class="col">
+                            <!-- Dropdown DOM'da kalsın, JS için; görünmesin -->
+                            <select id="measureMode" class="select hide">
+                                <option value="none">— Seçiniz</option>
+                                <option value="distance">Mesafe (2 nokta)</option>
+                                <option value="polyline">Yol Uzunluğu (çok nokta)</option>
+                                <option value="surface2">Yüzey Mesafesi (2 nokta)</option>
+                                <option value="surfacePath">Yüzey Yol (çok nokta)</option>
+                                <option value="girth">Kesit Çevresi (β)</option>
+                            </select>
+
+                            <div class="grid">
+                                <button class="btn" id="clearMarks">İşaretleri Temizle</button>
+                                <button class="btn" id="exportCSV">CSV Dışa Aktar</button>
+                            </div>
+
+                            <div class="sep"></div>
+                            <div class="measure-readout measure-readout--panel" id="measureReadoutPanel">
+                                <span class="muted">Ölçüm</span>
+                            </div>
+                        </div>
                     </div>
-                    <span class="muted" style="font-size:12px">Mobilde performans için kaliteyi “Düşük” seçin.</span>
+
+                    <!-- Işık -->
+                    <div class="card">
+                        <h3>Işık & Görünüm</h3>
+                        <label>FOV
+                            <input id="fovSlider" type="range" min="20" max="120" value="45">
+                        </label>
+
+                        <button id="btnPerspective">Perspective</button>
+                        <button id="btnOrtho">Orthographic</button>
+                        <label class="row" style="gap:8px;">
+                            <input id="gridToggle" type="checkbox" checked> Grid görünsün
+                        </label>
+                        <label>Arka Plan
+                            <input id="bgColor" type="color" value="#000000" class="input" />
+                        </label>
+                        <div class="col">
+                            <label class="row" style="gap:8px;">
+                                <input id="dirOff" type="checkbox"> Directional kapalı
+                            </label>
+                            <label>Azimut (°) <input id="azimuth" type="range" min="0" max="360" value="45"
+                                    class="slider" /></label>
+                            <label>Yükseklik (°) <input id="elevation" type="range" min="0" max="89" value="35"
+                                    class="slider" /></label>
+                            <label>Parlaklık <input id="intensity" type="range" min="0" max="1000" value="120"
+                                    class="slider" /></label>
+                            <label><input id="grayscale" type="checkbox" /> Siyah-Beyaz filtre</label>
+                        </div>
+                    </div>
+
+                    <!-- Filtreler -->
+                    <div class="card">
+                        <h3>Filtreler</h3>
+                        <div class="col">
+                            <div class="grid">
+                                <!-- RTI / Raking Light -->
+                                <div class="fx-group">
+                                    <label><input type="checkbox" id="fxRaking"> Raking Light (RTI)</label>
+                                    <div style="margin-left:1em;">
+                                        <label>Gain <input id="rGain" type="range" min="0.5" max="3" step="0.1"
+                                                value="1.2"></label>
+                                        <label>Wrap <input id="rWrap" type="range" min="0" max="0.6" step="0.05"
+                                                value="0.3"></label>
+                                    </div>
+                                </div>
+                                <label class="row" style="gap:8px;"><input type="checkbox" id="fxSsao"> SSAO (ortam
+                                    gölgeleme)</label>
+                                <div class="grid">
+                                    <label class="row" style="gap:8px;"><input type="checkbox" id="fxCurv"> Curvature
+                                        (Cavity)</label>
+                                    <label>Güç <input type="range" id="fxCurvAmt" class="slider" min="0.01" max="200"
+                                            value="80"></label>
+                                </div>
+                                <label class="row" style="gap:8px;"><input type="checkbox" id="fxEdges"> Kenar Vurgusu
+                                    (Sobel)</label>
+                            </div>
+                            <div class="grid">
+                                <select id="fxQuality" class="select">
+                                    <option value="low">Kalite: Düşük (mobil)</option>
+                                    <option value="high" selected>Kalite: Yüksek</option>
+                                </select>
+                                <button class="btn" id="btnRaking">Raking Işık (preset)</button>
+                                <button class="btn" id="btnFxReset">Filtreleri Sıfırla</button>
+                            </div>
+                            <span class="muted" style="font-size:12px">Mobilde performans için kaliteyi “Düşük”
+                                seçin.</span>
+                        </div>
+                    </div>
+
+                    <!-- Meta -->
+                    <div class="card">
+                        <h3>Bilgi & Etiketler</h3>
+                        <div class="col">
+                            <input class="input" id="title" placeholder="Eser adı" />
+                            <div class="grid">
+                                <input class="input" id="category" placeholder="Kategori (ör. Heykel)" />
+                                <input class="input" id="type" placeholder="Tür (ör. büst, figür)" />
+                            </div>
+                            <div class="grid">
+                                <input class="input" id="period" placeholder="Dönem (ör. Roma)" />
+                                <input class="input" id="material" placeholder="Malzeme (ör. Mermer)" />
+                            </div>
+                            <div class="grid">
+                                <input class="input" id="culture" placeholder="Kültür/Okul" />
+                                <input class="input" id="geo" placeholder="Konum (ülke/şehir/alan)" />
+                            </div>
+                            <textarea class="input" id="abstract" rows="3"
+                                placeholder="Bilimsel özet / açıklama"></textarea>
+                            <textarea class="input" id="publications" rows="2"
+                                placeholder="Yayınlar (satır başına DOI/URL)"></textarea>
+                            <button class="btn" id="saveMeta">Bu modele metayı ata</button>
+                        </div>
+                    </div>
+
+                    <!-- Arama -->
+                    <div class="card">
+                        <h3>Arama / Benzer Bul</h3>
+                        <div class="col">
+                            <input class="input" id="q" placeholder="Ara: kategori, dönem, malzeme, kültür, konum…" />
+                            <div class="grid">
+                                <button class="btn" id="btnSearch">Ara</button>
+                                <button class="btn" id="btnSimilar">Bu modele benzer</button>
+                            </div>
+                            <div class="list" id="results"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-
-            <!-- Meta -->
-            <div class="card">
-                <h3>Bilgi & Etiketler</h3>
-                <div class="col">
-                    <input class="input" id="title" placeholder="Eser adı" />
-                    <div class="grid">
-                        <input class="input" id="category" placeholder="Kategori (ör. Heykel)" />
-                        <input class="input" id="type" placeholder="Tür (ör. büst, figür)" />
-                    </div>
-                    <div class="grid">
-                        <input class="input" id="period" placeholder="Dönem (ör. Roma)" />
-                        <input class="input" id="material" placeholder="Malzeme (ör. Mermer)" />
-                    </div>
-                    <div class="grid">
-                        <input class="input" id="culture" placeholder="Kültür/Okul" />
-                        <input class="input" id="geo" placeholder="Konum (ülke/şehir/alan)" />
-                    </div>
-                    <textarea class="input" id="abstract" rows="3" placeholder="Bilimsel özet / açıklama"></textarea>
-                    <textarea class="input" id="publications" rows="2"
-                        placeholder="Yayınlar (satır başına DOI/URL)"></textarea>
-                    <button class="btn" id="saveMeta">Bu modele metayı ata</button>
-                </div>
-            </div>
-
-            <!-- Arama -->
-            <div class="card">
-                <h3>Arama / Benzer Bul</h3>
-                <div class="col">
-                    <input class="input" id="q" placeholder="Ara: kategori, dönem, malzeme, kültür, konum…" />
-                    <div class="grid">
-                        <button class="btn" id="btnSearch">Ara</button>
-                        <button class="btn" id="btnSimilar">Bu modele benzer</button>
-                    </div>
-                    <div class="list" id="results"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+        </div><!-- /.sidebar -->
+    </div><!-- /.app -->
 
     <!-- Mobil için panel aç/kapat -->
     <button class="fab" id="toggleSidebar" aria-label="Panel">☰</button>

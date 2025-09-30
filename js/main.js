@@ -47,11 +47,21 @@ function start() {
         elevation: must('elevation'),
         intensity: must('intensity'),
         grayscale: must('grayscale'),
+
+        // Ölçüm seçici (gizli select DOM'da duruyor)
         measureMode: must('measureMode'),
-        measureReadout: must('measureReadout'),
+
+        // Readout hedefleri: esnek/fallback'lı
+        measureReadoutOverlay: document.getElementById('measureReadoutOverlay')
+            || document.getElementById('measureReadout') // legacy tek hedef
+            || null,
+        measureReadoutPanel: document.getElementById('measureReadoutPanel') || null,
+
         hudMode: must('hudMode'),
         exportCSV: must('exportCSV'),
         clearMarks: must('clearMarks'),
+
+        // Meta
         title: must('title'),
         category: must('category'),
         type: must('type'),
@@ -62,21 +72,50 @@ function start() {
         abstract: must('abstract'),
         publications: must('publications'),
         saveMeta: must('saveMeta'),
+
+        // Arama
         q: must('q'),
         btnSearch: must('btnSearch'),
         btnSimilar: must('btnSimilar'),
         results: must('results'),
+
+        // Katalog
         loadCatalog: must('loadCatalog'),
         catalogSelect: must('catalogSelect'),
         catalogPreview: must('catalogPreview'),
         applyMeta: must('applyMeta'),
         catalogFile: must('catalogFile'),
         loadCatalogFile: must('loadCatalogFile'),
+
+        // Birimler
         unitSelect: must('unitSelect'),
         metersPerUnit: must('metersPerUnit'),
         calReal: must('calReal'),
-        btnCalFromLast: must('btnCalFromLast')
+        btnCalFromLast: must('btnCalFromLast'),
     };
+
+    function renderHudModelInfo() {
+        const hud = els.hudMode;
+        if (!hud) return;
+        const tri = (els.triCount?.textContent || '-').trim();
+        const dims = (els.bboxInfo?.textContent || '-').trim();
+        const mpu = (els.scaleInfo?.textContent || '-').trim();
+        hud.innerHTML =
+            `<b>Üçgen:</b> ${tri} &nbsp;•&nbsp; <b>Boyut:</b> ${dims} &nbsp;•&nbsp; <b>Ölçek:</b> ${mpu} m/birim`;
+    }
+
+    // Yardımcı: üç ölçüm aynı birimdeyse (mm/cm/m/ft/in) tekrarı kırp
+    function joinDims(a, b, c) {
+        const rx = /\s*(mm|cm|m|in|ft)$/;
+        const ua = (a.match(rx) || [])[1];
+        const ub = (b.match(rx) || [])[1];
+        const uc = (c.match(rx) || [])[1];
+        if (ua && ua === ub && ua === uc) {
+            // sadece son değer birimli kalsın
+            return `${a.replace(rx, '')} × ${b.replace(rx, '')} × ${c}`;
+        }
+        return `${a} × ${b} × ${c}`;
+    }
 
     // Ölçek
     let metersPerUnit = 1.0;
@@ -85,12 +124,15 @@ function start() {
     function setMetersPerUnit(v) {
         metersPerUnit = Number(v) || 1;
         els.scaleInfo.textContent = metersPerUnit.toFixed(3);
+        els.scaleInfo.title = els.scaleInfo.textContent + ' m/birim';
         if (lastRoot) {
             const size = new THREE.Box3().setFromObject(lastRoot).getSize(new THREE.Vector3());
-            els.bboxInfo.textContent =
-                fmtLen(size.x * metersPerUnit) + ' × ' +
-                fmtLen(size.y * metersPerUnit) + ' × ' +
-                fmtLen(size.z * metersPerUnit);
+            const x = fmtLen(size.x * metersPerUnit);
+            const y = fmtLen(size.y * metersPerUnit);
+            const z = fmtLen(size.z * metersPerUnit);
+            els.bboxInfo.textContent = joinDims(x, y, z);
+            els.bboxInfo.title = `${x} × ${y} × ${z}`;
+            renderHudModelInfo();
         }
     }
     function toMeters(x) { return x * metersPerUnit; }
@@ -134,15 +176,13 @@ function start() {
         requestRender();
     });
 
-    // Filtreler (composer) — BUNU ÖNCE oluştur
+    // Filtreler (composer)
     const filters = initFilters({ renderer, scene, camera, setRenderOverride });
 
     // Resize’da composer’ı güncelle
-    window.addEventListener('resize', () => {
-        if (filters && filters.resize) filters.resize();
-    });
+    window.addEventListener('resize', () => { if (filters && filters.resize) filters.resize(); });
 
-    // ---- RAKING UI BAĞLARI BURADA ----
+    // ---- RAKING UI ----
     const fxRaking = document.getElementById('fxRaking');
     const rGain = document.getElementById('rGain');   // 0.5–3.0
     const rWrap = document.getElementById('rWrap');   // 0.0–0.6
@@ -212,7 +252,7 @@ function start() {
     const fovSlider = document.getElementById('fovSlider');
     if (fovSlider) {
         fovSlider.addEventListener('input', () => {
-            setFov(Number(fovSlider.value)); // 20–120 clamp içeride
+            setFov(Number(fovSlider.value)); // 20–120
             requestRender();
         });
     }
@@ -246,7 +286,7 @@ function start() {
     const fxCurv = document.getElementById('fxCurv');
     const fxCurvAmt = document.getElementById('fxCurvAmt');
 
-    // İlk durum senkronu (checkbox’lar başlangıçta işaretliyse)
+    // İlk durum senkronu
     if (fxSSAO) { filters.enableSSAO(!!fxSSAO.checked); }
     if (fxEdges) { filters.enableEdges(!!fxEdges.checked); }
     if (fxCurv) { filters.enableCurvature(!!fxCurv.checked); }
@@ -264,22 +304,83 @@ function start() {
         requestRender();
     });
 
-    // Ölçüm
+    // ===== Ölçüm =====
+
+    // 1) Ölçüm metnini overlay + panel birlikte güncelleyen global fonksiyon.
+    window.updateReadout = function (html) {
+        const o = els.measureReadoutOverlay;
+        const p = els.measureReadoutPanel;
+        if (o) o.innerHTML = html;
+        if (p) p.innerHTML = html;
+    };
+
+    // 2) Ölçüm modülü
     const measure = initMeasurements({
         scene: scene,
         camera: camera,
         renderer: renderer,
-        readoutEl: els.measureReadout,
+        // readoutEl kritik değil; overlay'i versek de yukarıdaki global her şeyi günceller
+        readoutEl: els.measureReadoutOverlay,
         hudModeEl: els.hudMode,
         toMeters: toMeters,
         fmtLen: fmtLen
     });
     measure.attachCanvas(getDomElement());
-    els.measureMode.addEventListener('change', function () { measure.setMode(els.measureMode.value); });
+    renderHudModelInfo();
+
+    // 3) Ray butonları ve select senkronu (TOGGLE mantığı dahil)
+    function updateMeasureUI(mode) {
+        const rail = document.getElementById('measureRail');
+        if (!rail) return;
+        rail.querySelectorAll('.toolbtn').forEach(btn => {
+            const active = btn.dataset.mode === mode;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+    }
+
+    els.measureMode.addEventListener('change', function () {
+        const mode = els.measureMode.value || 'none';
+        measure.setMode(mode);     // measurements.js -> clear() çağırır ve HUD/Readout'u günceller
+        updateMeasureUI(mode);     // ray butonlarını boya
+        if (mode === 'none') {
+            // none'a geçince overlay/panel'i "Ölçüm" olarak sıfırla (garanti)
+            window.updateReadout('<span class="muted">Ölçüm</span>');
+        }
+    });
+
+    (function wireMeasureRail() {
+        const rail = document.getElementById('measureRail');
+        if (!rail) return; // ray yoksa sadece dropdown ile çalışır
+        const btns = rail.querySelectorAll('.toolbtn');
+        if (!btns.length) return;
+
+        function applyMode(nextMode) {
+            const current = els.measureMode.value || 'none';
+            const mode = (current === nextMode) ? 'none' : nextMode; // aynı butona basınca kapat
+            els.measureMode.value = mode;
+            els.measureMode.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        btns.forEach(b => b.addEventListener('click', () => applyMode(b.dataset.mode)));
+
+        // başlangıç boyaması
+        updateMeasureUI(els.measureMode.value || 'none');
+    })();
+
+    // ESC ile hızlı kapatma
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && (els.measureMode.value || 'none') !== 'none') {
+            els.measureMode.value = 'none';
+            els.measureMode.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
+
+    // Clear / CSV
     els.clearMarks.addEventListener('click', function () { measure.clear(); });
     els.exportCSV.addEventListener('click', function () { measure.exportCSV(); });
 
-    // Loader
+    // ===== Loader =====
     const loader = initLoader({
         scene: scene, camera: camera, controls: controls, renderer: renderer,
         onAfterLoad: function (r) {
@@ -289,14 +390,18 @@ function start() {
 
             // BBox ve üçgen sayısı
             const size = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
-            els.bboxInfo.textContent =
-                fmtLen(size.x * metersPerUnit) + ' × ' +
-                fmtLen(size.y * metersPerUnit) + ' × ' +
-                fmtLen(size.z * metersPerUnit);
+            const x = fmtLen(size.x * metersPerUnit);
+            const y = fmtLen(size.y * metersPerUnit);
+            const z = fmtLen(size.z * metersPerUnit);
+            els.bboxInfo.textContent = joinDims(x, y, z);
+            els.bboxInfo.title = `${x} × ${y} × ${z}`;
+
             try {
                 const tri = countTriangles(root);
                 els.triCount.textContent = tri.toLocaleString('tr-TR');
+                els.triCount.title = els.triCount.textContent;
             } catch (e) { console.warn('Tri count failed:', e); }
+            renderHudModelInfo();
         }
     });
 

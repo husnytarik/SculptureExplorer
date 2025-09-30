@@ -15,17 +15,42 @@ export function initMeasurements({ scene, camera, renderer, readoutEl, hudModeEl
 
     function setTargetMesh(mesh) {
         targetMesh = mesh; clear();
-        if (mesh) { flash('Yüzey grafiği hazırlanıyor…'); ensureGraph(mesh).then(function () { flash('Yüzey grafiği hazır.'); }); }
+        if (mesh) {
+            flash('Yüzey grafiği hazırlanıyor…');
+            ensureGraph(mesh).then(function () { flash('Yüzey grafiği hazır.'); });
+        }
+    }
+
+    // ---- Readout yardımcı (overlay + panel uyumlu) ----
+    // 1) main.js içindeki window.updateReadout varsa onu kullanır (overlay + panel birlikte güncellenir)
+    // 2) Yoksa initMeasurements'tan gelen readoutEl'e yazar
+    // 3) O da yoksa id fallback: measureReadoutOverlay -> measureReadout (legacy) -> measureReadoutPanel
+    function updateReadout(html) {
+        if (typeof window !== 'undefined' && typeof window.updateReadout === 'function') {
+            try { window.updateReadout(html); } catch (e) { }
+            return;
+        }
+        if (readoutEl && typeof readoutEl.innerHTML !== 'undefined') {
+            readoutEl.innerHTML = html;
+            return;
+        }
+        const el =
+            document.getElementById('measureReadoutOverlay') ||
+            document.getElementById('measureReadout') ||
+            document.getElementById('measureReadoutPanel');
+        if (el) el.innerHTML = html;
     }
 
     function clear() {
         marks = [];
         for (let i = 0; i < overlays.length; i++) scene.remove(overlays[i]);
         overlays = [];
-        readoutEl.innerHTML = '<span class=\"muted\">Sonuçlar burada görünecek…</span>';
-        hudModeEl.textContent = 'Mod: ' + (mode === 'none' ? 'Gezinti' : labelFor(mode));
+        updateReadout('<span class="muted">Ölçüm</span>');
+        // eskiden: hudModeEl.textContent = 'Mod: ...'
+        // Artık HUD'a ölçüm modu yazmıyoruz; model bilgileri main.js'den gelir.
         requestRender();
     }
+
     function labelFor(m) {
         if (m === 'distance') return 'Mesafe (2 nokta)';
         if (m === 'polyline') return 'Yol Uzunluğu (çok nokta)';
@@ -42,20 +67,29 @@ export function initMeasurements({ scene, camera, renderer, readoutEl, hudModeEl
         if (scale === undefined) scale = 0.01;
         const g = new THREE.SphereGeometry(scale, 16, 12);
         const m = new THREE.MeshBasicMaterial({ color: color });
-        const s = new THREE.Mesh(g, m); s.position.copy(pos); scene.add(s); overlays.push(s);
+        const s = new THREE.Mesh(g, m);
+        s.position.copy(pos);
+        scene.add(s);
+        overlays.push(s);
         return s;
     }
+
     function addLine(points, color) {
         if (color === undefined) color = 0x93c5fd;
         const g = new THREE.BufferGeometry().setFromPoints(points);
         const m = new THREE.LineBasicMaterial({ color: color, linewidth: 2 });
-        const l = new THREE.Line(g, m); scene.add(l); overlays.push(l); return l;
+        const l = new THREE.Line(g, m);
+        scene.add(l);
+        overlays.push(l);
+        return l;
     }
+
     function screenToNDC(event) {
         const rect = renderer.domElement.getBoundingClientRect();
         ndc.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         ndc.y = - ((event.clientY - rect.top) / rect.height) * 2 + 1;
     }
+
     function pickPoint(event) {
         const mesh = targetMesh || getCurrentMesh();
         if (!mesh) return null;
@@ -64,8 +98,6 @@ export function initMeasurements({ scene, camera, renderer, readoutEl, hudModeEl
         const hit = raycaster.intersectObject(mesh, true)[0];
         return hit ? hit.point.clone() : null;
     }
-
-    function updateReadout(html) { readoutEl.innerHTML = html; }
 
     async function onClick(e) {
         if (mode === 'none') return;
@@ -91,6 +123,7 @@ export function initMeasurements({ scene, camera, renderer, readoutEl, hudModeEl
         lastLenUnits = d;
         updateReadout('<div><b>Mesafe:</b> ' + fmtLen(toMeters(d)) + '</div>');
     }
+
     function doPolyline() {
         if (marks.length < 2) return;
         const pts = []; for (let i = 0; i < marks.length; i++) pts.push(marks[i].point);
@@ -109,7 +142,7 @@ export function initMeasurements({ scene, camera, renderer, readoutEl, hudModeEl
             lastLenUnits = sp.length;
             updateReadout('<div><b>Yüzey Mesafesi:</b> ' + fmtLen(toMeters(sp.length)) + '</div>');
         } else {
-            updateReadout('<span class=\"muted\">Yüzey yolu bulunamadı.</span>');
+            updateReadout('<span class="muted">Yüzey yolu bulunamadı.</span>');
         }
     }
 
@@ -123,7 +156,7 @@ export function initMeasurements({ scene, camera, renderer, readoutEl, hudModeEl
             lastLenUnits = sp.length;
             updateReadout('<div><b>Yüzey Yol Uzunluğu:</b> ' + fmtLen(toMeters(sp.length)) + '</div>');
         } else {
-            updateReadout('<span class=\"muted\">Yüzey yolu bulunamadı.</span>');
+            updateReadout('<span class="muted">Yüzey yolu bulunamadı.</span>');
         }
     }
 
@@ -140,6 +173,7 @@ export function initMeasurements({ scene, camera, renderer, readoutEl, hudModeEl
         }
         return ds.length ? ds.reduce(function (a, b) { return a + b; }, 0) / ds.length : 0.05;
     }
+
     function doGirth() {
         if (marks.length < 1) return;
         const center = marks[0].point;
@@ -157,7 +191,7 @@ export function initMeasurements({ scene, camera, renderer, readoutEl, hudModeEl
             const hit = raycaster.intersectObject(targetMesh || getCurrentMesh(), true)[0];
             if (hit) pts.push(hit.point.clone());
         }
-        if (pts.length < 8) { updateReadout('<span class=\"muted\">Çevre hesaplanamadı (yetersiz örnek).</span>'); return; }
+        if (pts.length < 8) { updateReadout('<span class="muted">Çevre hesaplanamadı (yetersiz örnek).</span>'); return; }
         pts.sort(function (A, B) {
             const a = Math.atan2(new THREE.Vector3().subVectors(A, center).dot(v), new THREE.Vector3().subVectors(A, center).dot(u));
             const b = Math.atan2(new THREE.Vector3().subVectors(B, center).dot(v), new THREE.Vector3().subVectors(B, center).dot(u));
@@ -174,6 +208,7 @@ export function initMeasurements({ scene, camera, renderer, readoutEl, hudModeEl
         canvas.addEventListener('click', onClick);
         canvas.addEventListener('contextmenu', onContext);
     }
+
     function exportCSV() {
         if (!marks.length) { flash('Önce ölçüm yapın.'); return; }
         const rows = [['idx', 'x', 'y', 'z', 'type']];
@@ -183,7 +218,10 @@ export function initMeasurements({ scene, camera, renderer, readoutEl, hudModeEl
         }
         const csv = rows.map(function (r) { return r.join(','); }).join('\n');
         const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'measurement_points.csv'; a.click();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'measurement_points.csv';
+        a.click();
     }
 
     function getLastLengthUnits() { return lastLenUnits; }
