@@ -1,6 +1,6 @@
 :root {
-    --bg: #0a0a0a;
-    --panel: #0a0a0a;
+    --bg: #363636;
+    --panel: rgb(36, 36, 36);
     --border: #313131;
     --text: #808080;
     --muted: #8a867e;
@@ -194,7 +194,7 @@ input[type="range"] {
 /* genel input/select sınıflarınla uyum */
 .select,
 .input {
-    background: #0f0f0f;
+    background: var(--panel);
     color: var(--text-strong);
     border: 1px solid var(--border);
     border-radius: var(--radius-ctrl);
@@ -360,9 +360,63 @@ canvas {
     display: none;
 }
 
-@media (max-width:1024px) {
-    .fab {
-        display: block;
+/* ——— Mobil düzen: sayfa scroll’u kilitli, sadece panel içi kayar ——— */
+@media (max-width: 1024px) {
+
+    /* 1) Sayfa yüksekliğini kilitle ve body scroll'u kapat */
+    html,
+    body {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* 2) Uygulama 100vh (veya modern tarayıcıda 100svh) kadar yer kaplasın */
+    .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 56vh 1fr;
+        /* üstte viewer, altta panel kalan alanı alsın */
+        height: 100vh;
+        height: 100svh;
+        /* iOS/Android için daha doğru */
+        padding: 10px;
+        gap: 10px;
+    }
+
+    /* 3) Viewer kendi satırında tam yükseklik; min-height sınırlamasını kaldır */
+    .viewer {
+        height: 100%;
+        min-height: 0;
+    }
+
+    /* 4) Panel satırı: tüm kalan alanı kapla; scroll sadece içeride */
+    .sidebar {
+        min-height: 0;
+    }
+
+    .sidepanel {
+        height: 100%;
+        display: flex;
+    }
+
+    .sidepanel__body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        /* ← yalnız panel içinde kaydır */
+        overflow-x: hidden;
+        padding-right: 6px;
+        /* scrollbar payı */
+    }
+
+    /* 5) Mobilde kart gridleri tek sütun */
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* 6) Küçük dokunuşlar */
+    .legend {
+        left: 8px;
+        bottom: 8px;
     }
 }
 
