@@ -16,10 +16,50 @@ import { initFilters } from './filters.js';
 
 function must(id) {
     const el = document.getElementById(id);
-    if (!el) { const msg = '[main] DOM id bulunamadı: #' + id; console.error(msg); flash(msg); }
+    if (!el) {
+        const msg = '[main] DOM id bulunamadı: #' + id;
+        console.error(msg);
+        flash(msg);
+    }
+    return document.getElementById(id) || null;
+}
+function soft(id) { return document.getElementById(id) || null; }
+
+// ---------- Overlay / HUD yardımcıları ----------
+function ensureOverlayRoot(viewerEl) {
+    let overlay = viewerEl.querySelector('.overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.top = '10px';
+        overlay.style.left = '10px';
+        viewerEl.appendChild(overlay);
+    }
+    return overlay;
+}
+function ensureHudInfo(viewerEl) {
+    let el = document.getElementById('hudInfo');
+    if (!el) {
+        el = document.createElement('span');
+        el.id = 'hudInfo';
+        el.className = 'hudline';
+        ensureOverlayRoot(viewerEl).appendChild(el);
+    }
+    return el;
+}
+function ensureMeasureOverlay(viewerEl) {
+    let el = document.getElementById('measureReadoutOverlay');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'measureReadoutOverlay';
+        el.className = 'measure-readout measure-readout--overlay';
+        viewerEl.appendChild(el);
+    }
     return el;
 }
 
+// ---------- Yardımcılar ----------
 function countTriangles(object) {
     let tri = 0;
     object.traverse(n => {
@@ -31,6 +71,16 @@ function countTriangles(object) {
     });
     return tri | 0;
 }
+function joinDims(a, b, c) {
+    const rx = /\s*(mm|cm|m|in|ft)$/;
+    const ua = (a.match(rx) || [])[1];
+    const ub = (b.match(rx) || [])[1];
+    const uc = (c.match(rx) || [])[1];
+    if (ua && ua === ub && ua === uc) {
+        return `${a.replace(rx, '')} × ${b.replace(rx, '')} × ${c}`;
+    }
+    return `${a} × ${b} × ${c}`;
+}
 
 function start() {
     const els = {
@@ -38,26 +88,26 @@ function start() {
         modelUrl: must('modelUrl'),
         loadBtn: must('loadBtn'),
         screenshotBtn: must('screenshotBtn'),
-        localFile: document.getElementById('localFile'),
-        loadLocal: document.getElementById('loadLocal'),
-        triCount: must('triCount'),
-        bboxInfo: must('bboxInfo'),
-        scaleInfo: must('scaleInfo'),
+        localFile: soft('localFile'),
+        loadLocal: soft('loadLocal'),
+
+        // İstatistikler (opsiyonel olabilir)
+        triCount: soft('triCount'),
+        bboxInfo: soft('bboxInfo'),
+        scaleInfo: soft('scaleInfo'),
+
+        // Işık / görünüm
         azimuth: must('azimuth'),
         elevation: must('elevation'),
         intensity: must('intensity'),
         grayscale: must('grayscale'),
 
-        // Ölçüm seçici (gizli select DOM'da duruyor)
+        // Ölçüm
         measureMode: must('measureMode'),
+        measureReadoutOverlay: soft('measureReadoutOverlay') || soft('measureReadout') || null,
+        measureReadoutPanel: soft('measureReadoutPanel') || null,
 
-        // Readout hedefleri: esnek/fallback'lı
-        measureReadoutOverlay: document.getElementById('measureReadoutOverlay')
-            || document.getElementById('measureReadout') // legacy tek hedef
-            || null,
-        measureReadoutPanel: document.getElementById('measureReadoutPanel') || null,
-
-        hudMode: must('hudMode'),
+        hudMode: document.getElementById('hudMode'), // opsiyonel (ölçüm modülüne geçer)
         exportCSV: must('exportCSV'),
         clearMarks: must('clearMarks'),
 
@@ -72,6 +122,7 @@ function start() {
         abstract: must('abstract'),
         publications: must('publications'),
         saveMeta: must('saveMeta'),
+        editMeta: must('editMeta'),
 
         // Arama
         q: must('q'),
@@ -84,65 +135,113 @@ function start() {
         catalogSelect: must('catalogSelect'),
         catalogPreview: must('catalogPreview'),
         applyMeta: must('applyMeta'),
-        catalogFile: must('catalogFile'),
-        loadCatalogFile: must('loadCatalogFile'),
-
-        // Birimler
-        unitSelect: must('unitSelect'),
-        metersPerUnit: must('metersPerUnit'),
-        calReal: must('calReal'),
-        btnCalFromLast: must('btnCalFromLast'),
+        catalogFile: soft('catalogFile'),
+        loadCatalogFile: soft('loadCatalogFile'),
     };
 
-    function renderHudModelInfo() {
-        const hud = els.hudMode;
-        if (!hud) return;
-        const tri = (els.triCount?.textContent || '-').trim();
-        const dims = (els.bboxInfo?.textContent || '-').trim();
-        const mpu = (els.scaleInfo?.textContent || '-').trim();
-        hud.innerHTML =
-            `<b>Üçgen:</b> ${tri} &nbsp;•&nbsp; <b>Boyut:</b> ${dims} &nbsp;•&nbsp; <b>Ölçek:</b> ${mpu} m/birim`;
+    function metaFields() {
+        return [
+            els.title, els.category, els.type, els.period,
+            els.material, els.culture, els.geo, els.abstract, els.publications
+        ].filter(Boolean);
     }
 
-    // Yardımcı: üç ölçüm aynı birimdeyse (mm/cm/m/ft/in) tekrarı kırp
-    function joinDims(a, b, c) {
-        const rx = /\s*(mm|cm|m|in|ft)$/;
-        const ua = (a.match(rx) || [])[1];
-        const ub = (b.match(rx) || [])[1];
-        const uc = (c.match(rx) || [])[1];
-        if (ua && ua === ub && ua === uc) {
-            // sadece son değer birimli kalsın
-            return `${a.replace(rx, '')} × ${b.replace(rx, '')} × ${c}`;
+    function setMetaEditable(on) {
+        metaFields().forEach(el => {
+            if ('readOnly' in el) el.readOnly = !on;
+            // görsel ipucu için class
+            el.classList.toggle('is-readonly', !on);
+        });
+        // Kaydet sadece düzenleme açıkken aktif
+        if (els.saveMeta) els.saveMeta.disabled = !on;
+
+        // Düzenle butonu durumu
+        if (els.editMeta) {
+            els.editMeta.textContent = on ? 'Vazgeç' : 'Düzenle';
+            els.editMeta.setAttribute('aria-pressed', on ? 'true' : 'false');
+            els.editMeta.dataset.editing = on ? 'true' : 'false';
         }
-        return `${a} × ${b} × ${c}`;
     }
 
-    // Ölçek
-    let metersPerUnit = 1.0;
-    let lastRoot = null;
+    // başta kilitli başlat:
+    setMetaEditable(false);
+
+    // butonu bağla:
+    els.editMeta.addEventListener('click', () => {
+        const now = els.editMeta.dataset.editing === 'true';
+        setMetaEditable(!now);
+    });
+
+    // ---------- STATE ----------
+    let metersPerUnit = 1.0;     // Kart kaldırıldığı için default 1
+    let bboxSizeRaw = null;      // THREE.Vector3 | null
+    let triCountVal = null;      // number | null
+
+    // HUD satırı (Üçgen • Boyut • Ölçek)
+    let hudInfoEl = null;
+    function renderHudModelInfo() {
+        const hud = hudInfoEl || ensureHudInfo(els.viewer);
+        if (!hud) return;
+
+        const triText = (triCountVal != null) ? triCountVal.toLocaleString('tr-TR') : '-';
+
+        let dimsText = '-';
+        if (bboxSizeRaw) {
+            const x = fmtLen(bboxSizeRaw.x * metersPerUnit);
+            const y = fmtLen(bboxSizeRaw.y * metersPerUnit);
+            const z = fmtLen(bboxSizeRaw.z * metersPerUnit);
+            dimsText = joinDims(x, y, z);
+        }
+
+        const mpuText = (isFinite(metersPerUnit) ? metersPerUnit.toFixed(3) : '-');
+
+        // düz metin
+        hud.textContent = `Üçgen: ${triText} • Boyut: ${dimsText} • Ölçek: ${mpuText} m/birim`;
+    }
 
     function setMetersPerUnit(v) {
         metersPerUnit = Number(v) || 1;
-        els.scaleInfo.textContent = metersPerUnit.toFixed(3);
-        els.scaleInfo.title = els.scaleInfo.textContent + ' m/birim';
-        if (lastRoot) {
-            const size = new THREE.Box3().setFromObject(lastRoot).getSize(new THREE.Vector3());
-            const x = fmtLen(size.x * metersPerUnit);
-            const y = fmtLen(size.y * metersPerUnit);
-            const z = fmtLen(size.z * metersPerUnit);
+
+        // (varsa) yandaki "Ölçek" alanını güncelle
+        if (els.scaleInfo) {
+            els.scaleInfo.textContent = metersPerUnit.toFixed(3);
+            els.scaleInfo.title = els.scaleInfo.textContent + ' m/birim';
+        }
+
+        // (varsa) yandaki "Boyut" alanını güncelle
+        if (bboxSizeRaw && els.bboxInfo) {
+            const x = fmtLen(bboxSizeRaw.x * metersPerUnit);
+            const y = fmtLen(bboxSizeRaw.y * metersPerUnit);
+            const z = fmtLen(bboxSizeRaw.z * metersPerUnit);
             els.bboxInfo.textContent = joinDims(x, y, z);
             els.bboxInfo.title = `${x} × ${y} × ${z}`;
-            renderHudModelInfo();
         }
+
+        renderHudModelInfo();
+        if (typeof requestRender === 'function') requestRender();
     }
     function toMeters(x) { return x * metersPerUnit; }
 
-    // Sahne
+    // ---------- SAHNE ----------
     const s = initScene(els.viewer);
     const renderer = s.renderer, scene = s.scene, camera = s.camera, controls = s.controls;
 
+    // HUD & Readout elementlerini garanti altına al
+    hudInfoEl = ensureHudInfo(els.viewer);
+    ensureMeasureOverlay(els.viewer);
+
+    // Ölçüm Readout bridge (overlay + panel birlikte güncellensin)
+    if (typeof window.updateReadout !== 'function') {
+        window.updateReadout = function (html) {
+            const o = ensureMeasureOverlay(els.viewer);
+            o.innerHTML = html;
+            const p = document.getElementById('measureReadoutPanel');
+            if (p) p.innerHTML = html;
+        };
+    }
+
     // GRID toggle
-    const gridToggle = document.getElementById('gridToggle');
+    const gridToggle = soft('gridToggle');
     if (gridToggle && grid) {
         grid.visible = !!gridToggle.checked;
         gridToggle.addEventListener('change', function () {
@@ -152,13 +251,11 @@ function start() {
     }
 
     // Arka plan rengi
-    const bgColor = document.getElementById('bgColor');
+    const bgColor = soft('bgColor');
     if (bgColor) {
-        bgColor.value = '#5a5a5a';       // default renk
-        const c = new THREE.Color(bgColor.value);
+        const c = new THREE.Color(bgColor.value || '#5a5a5a');
         renderer.setClearColor(c, 1);
         requestRender();
-
         bgColor.addEventListener('input', function () {
             const c = new THREE.Color(bgColor.value);
             renderer.setClearColor(c, 1);
@@ -177,95 +274,27 @@ function start() {
     });
 
     // Directional kapalı/açık
-    const dirOff = document.getElementById('dirOff');
+    const dirOff = soft('dirOff');
     if (dirOff) dirOff.addEventListener('change', function () {
         lighting.sun.visible = !dirOff.checked;
         requestRender();
     });
 
-    // Filtreler (composer)
+    // Postprocess: sadece Curvature + Edges
     const filters = initFilters({ renderer, scene, camera, setRenderOverride });
-
-    // Resize’da composer’ı güncelle
     window.addEventListener('resize', () => { if (filters && filters.resize) filters.resize(); });
 
-    // ---- RAKING UI ----
-    const fxRaking = document.getElementById('fxRaking');
-    const rGain = document.getElementById('rGain');   // 0.5–3.0
-    const rWrap = document.getElementById('rWrap');   // 0.0–0.6
-
-    // İlk durum senkronu
-    if (fxRaking && fxRaking.checked) {
-        filters.enableRaking(true);
-        const az0 = Number(els.azimuth.value || 45);
-        const el0 = Number(els.elevation.value || 30);
-        filters.setRakingLightDirFromAzEl(az0, el0);
-        if (rGain || rWrap) {
-            filters.setRakingParams({
-                gain: Number(rGain?.value || 1.2),
-                wrap: Number(rWrap?.value || 0.3)
-            });
-        }
-        requestRender();
-    }
-
-    if (fxRaking) {
-        fxRaking.addEventListener('change', () => {
-            const on = !!fxRaking.checked;
-            filters.enableRaking(on);
-            if (on) {
-                const az = Number(els.azimuth.value || 45);
-                const el = Number(els.elevation.value || 30);
-                filters.setRakingLightDirFromAzEl(az, el);
-                if (rGain || rWrap) {
-                    filters.setRakingParams({
-                        gain: Number(rGain?.value || 1.2),
-                        wrap: Number(rWrap?.value || 0.3)
-                    });
-                }
-            }
-            requestRender();
-        });
-    }
-
-    // Azimuth/Elevation değişince raking yönünü güncelle
-    els.azimuth.addEventListener('input', () => {
-        const az = Number(els.azimuth.value || 45);
-        const el = Number(els.elevation.value || 30);
-        if (fxRaking?.checked) filters.setRakingLightDirFromAzEl(az, el);
-        requestRender();
-    });
-    els.elevation.addEventListener('input', () => {
-        const az = Number(els.azimuth.value || 45);
-        const el = Number(els.elevation.value || 30);
-        if (fxRaking?.checked) filters.setRakingLightDirFromAzEl(az, el);
-        requestRender();
-    });
-
-    // (opsiyonel) raking parametre slider’ları
-    if (rGain || rWrap) {
-        const pushParams = () => {
-            filters.setRakingParams({
-                gain: Number(rGain?.value || 1.2),
-                wrap: Number(rWrap?.value || 0.3)
-            });
-            requestRender();
-        };
-        rGain?.addEventListener('input', pushParams);
-        rWrap?.addEventListener('input', pushParams);
-    }
-
-    // --- FOV / CAMERA MODE UI ---
-    const fovSlider = document.getElementById('fovSlider');
+    // --- FOV / CAMERA MODE ---
+    const fovSlider = soft('fovSlider');
     if (fovSlider) {
-        setFov(Number(fovSlider.value));
+        setFov(Number(fovSlider.value || 45));
         requestRender();
         fovSlider.addEventListener('input', () => {
             setFov(Number(fovSlider.value));
             requestRender();
         });
     }
-    const btnPerspective = document.getElementById('btnPerspective');
+    const btnPerspective = soft('btnPerspective');
     if (btnPerspective) {
         btnPerspective.addEventListener('click', () => {
             switchToPerspective();
@@ -273,115 +302,19 @@ function start() {
             requestRender();
         });
     }
-
-    const btnOrtho = document.getElementById('btnOrtho');
+    const btnOrtho = soft('btnOrtho');
     if (btnOrtho) {
         btnOrtho.addEventListener('click', () => {
             switchToOrthographic();
             if (filters.setCamera) filters.setCamera(getCamera());
-            // Ortho’da SSAO kapatalım
-            const cb = document.getElementById('fxSsao');
-            if (cb && cb.checked) cb.checked = false;
-            if (filters.enableSSAO) filters.enableSSAO(false);
             requestRender();
         });
     }
 
-    // Filtre kontrolleri
-    const fxSSAO = document.getElementById('fxSsao');
-    const fxEdges = document.getElementById('fxEdges');
-    const fxQual = document.getElementById('fxQuality');
-    const fxCurv = document.getElementById('fxCurv');
-    const fxCurvAmt = document.getElementById('fxCurvAmt');
-
-    // İlk durum senkronu
-    if (fxSSAO) { filters.enableSSAO(!!fxSSAO.checked); }
-    if (fxEdges) { filters.enableEdges(!!fxEdges.checked); }
-    if (fxCurv) { filters.enableCurvature(!!fxCurv.checked); }
-    if (fxCurvAmt) { filters.setCurvatureStrength((Number(fxCurvAmt.value) || 80) / 100); }
-    if (fxQual) { filters.setQuality(fxQual.value); }
-    requestRender();
-
-    // Eventler
-    if (fxSSAO) fxSSAO.addEventListener('change', () => { filters.enableSSAO(!!fxSSAO.checked); requestRender(); });
-    if (fxEdges) fxEdges.addEventListener('change', () => { filters.enableEdges(!!fxEdges.checked); requestRender(); });
-    if (fxQual) fxQual.addEventListener('change', () => { filters.setQuality(fxQual.value); requestRender(); });
-    if (fxCurv) fxCurv.addEventListener('change', () => { filters.enableCurvature(!!fxCurv.checked); requestRender(); });
-    if (fxCurvAmt) fxCurvAmt.addEventListener('input', () => {
-        filters.setCurvatureStrength((Number(fxCurvAmt.value) || 80) / 100);
-        requestRender();
-    });
-
-    // ===== Ölçüm =====
-
-    // 1) Ölçüm metnini overlay + panel birlikte güncelleyen global fonksiyon.
-    window.updateReadout = function (html) {
-        const o = els.measureReadoutOverlay;
-        const p = els.measureReadoutPanel;
-        if (o) o.innerHTML = html;
-        if (p) p.innerHTML = html;
-    };
-
-    // 2) Ölçüm modülü
-    const measure = initMeasurements({
-        scene: scene,
-        camera: camera,
-        renderer: renderer,
-        // readoutEl kritik değil; overlay'i versek de yukarıdaki global her şeyi günceller
-        readoutEl: els.measureReadoutOverlay,
-        hudModeEl: els.hudMode,
-        toMeters: toMeters,
-        fmtLen: fmtLen
-    });
-    measure.attachCanvas(getDomElement());
-    renderHudModelInfo();
-
-    // 3) Ray butonları ve select senkronu (TOGGLE mantığı dahil)
-    function updateMeasureUI(mode) {
-        const rail = document.getElementById('measureRail');
-        if (!rail) return;
-        rail.querySelectorAll('.toolbtn').forEach(btn => {
-            const active = btn.dataset.mode === mode;
-            btn.classList.toggle('is-active', active);
-            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-        });
-    }
-
-    els.measureMode.addEventListener('change', function () {
-        const mode = els.measureMode.value || 'none';
-        measure.setMode(mode);     // measurements.js -> clear() çağırır ve HUD/Readout'u günceller
-        updateMeasureUI(mode);     // ray butonlarını boya
-        if (mode === 'none') {
-            // none'a geçince overlay/panel'i "Ölçüm" olarak sıfırla (garanti)
-            window.updateReadout('<span class="muted">Ölçüm</span>');
-        }
-    });
-
-    (function wireMeasureRail() {
-        const rail = document.getElementById('measureRail');
-        if (!rail) return; // ray yoksa sadece dropdown ile çalışır
-        const btns = rail.querySelectorAll('.toolbtn');
-        if (!btns.length) return;
-
-        function applyMode(nextMode) {
-            const current = els.measureMode.value || 'none';
-            const mode = (current === nextMode) ? 'none' : nextMode; // aynı butona basınca kapat
-            els.measureMode.value = mode;
-            els.measureMode.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-
-        btns.forEach(b => b.addEventListener('click', () => applyMode(b.dataset.mode)));
-
-        // başlangıç boyaması
-        updateMeasureUI(els.measureMode.value || 'none');
-    })();
-
-    // === Işık & Görünüm panel toggle (toolrail butonu ile) ===
-    const viewPanel = document.getElementById('viewPanel');
-    const btnViewPanel = document.getElementById('btnViewPanel');
-
-    // (Opsiyonel) Sidebar'daki alternatif butonu da desteklemek istersen:
-    const altToggleBtn = document.getElementById('toggleViewPanel');
+    // --- Işık & Görünüm panel toggle ---
+    const viewPanel = soft('viewPanel');
+    const btnViewPanel = soft('btnViewPanel');
+    const altToggleBtn = soft('toggleViewPanel');
 
     function syncViewBtn() {
         if (!btnViewPanel || !viewPanel) return;
@@ -389,26 +322,16 @@ function start() {
         btnViewPanel.classList.toggle('is-active', opened);
         btnViewPanel.setAttribute('aria-pressed', opened ? 'true' : 'false');
     }
-
     function toggleViewPanel() {
         if (!viewPanel) return;
         viewPanel.hidden = !viewPanel.hidden;
         syncViewBtn();
         requestRender?.();
     }
-
     btnViewPanel?.addEventListener('click', toggleViewPanel);
-    altToggleBtn?.addEventListener('click', toggleViewPanel); // varsa
+    altToggleBtn?.addEventListener('click', toggleViewPanel);
 
-    // ESC ile panel kapat
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && viewPanel && !viewPanel.hidden) {
-            viewPanel.hidden = true;
-            syncViewBtn();
-        }
-    });
-
-    // Panel dışına tıklayınca kapat (toggle butonu hariç)
+    // Panel dışına tıklayınca kapat
     document.addEventListener('mousedown', (e) => {
         if (!viewPanel || viewPanel.hidden) return;
         const inside = viewPanel.contains(e.target);
@@ -419,43 +342,164 @@ function start() {
         }
     });
 
-    // İlk senkron
-    syncViewBtn();
+    // --- Viewer Filters (sağ alt) ---
+    const btnCurv = soft('btnCurv');
+    const btnEdges = soft('btnEdges');
+    const curvPopover = soft('curvPopover');
+    const curvAmt = soft('curvAmt');
 
+    let curvEnabled = false;
+    let edgesEnabled = false;
 
-    // ESC ile hızlı kapatma
+    function setBtnState(btn, on) {
+        if (!btn) return;
+        btn.classList.toggle('is-active', !!on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
+    // Curvature toggle + popover
+    if (btnCurv) {
+        if (curvPopover) curvPopover.hidden = true; // başlangıçta gizli
+        btnCurv.addEventListener('click', () => {
+            curvEnabled = !curvEnabled;
+            filters.enableCurvature(curvEnabled);
+            setBtnState(btnCurv, curvEnabled);
+
+            if (curvPopover) curvPopover.hidden = !curvEnabled;
+            if (curvEnabled && curvAmt) {
+                filters.setCurvatureStrength((Number(curvAmt.value) || 80) / 100);
+            }
+            requestRender();
+        });
+    }
+    if (curvAmt) {
+        curvAmt.addEventListener('input', () => {
+            if (curvEnabled) {
+                filters.setCurvatureStrength((Number(curvAmt.value) || 80) / 100);
+                requestRender();
+            }
+        });
+    }
+
+    // Edges toggle
+    if (btnEdges) {
+        btnEdges.addEventListener('click', () => {
+            edgesEnabled = !edgesEnabled;
+            filters.enableEdges(edgesEnabled);
+            setBtnState(btnEdges, edgesEnabled);
+            requestRender();
+        });
+    }
+
+    // Curvature popover dışına tıklanınca sadece popover gizle (efekt açık kalsın)
+    document.addEventListener('mousedown', (e) => {
+        if (!curvPopover || curvPopover.hidden) return;
+        const inside = curvPopover.contains(e.target);
+        const onBtn = btnCurv?.contains(e.target);
+        if (!inside && !onBtn) curvPopover.hidden = true;
+    });
+
+    // ESC ile kapatmalar
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && (els.measureMode.value || 'none') !== 'none') {
-            els.measureMode.value = 'none';
-            els.measureMode.dispatchEvent(new Event('change', { bubbles: true }));
+        if (e.key === 'Escape') {
+            // ölçüm modu açıksa kapat
+            if ((els.measureMode.value || 'none') !== 'none') {
+                els.measureMode.value = 'none';
+                els.measureMode.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            // view panel açıksa kapat
+            if (viewPanel && !viewPanel.hidden) { viewPanel.hidden = true; syncViewBtn(); }
+            // curvature popover açıksa kapat
+            if (curvPopover && !curvPopover.hidden) curvPopover.hidden = true;
         }
     });
+
+    // ---------- Ölçüm ----------
+    window.updateReadout = function (html) {
+        const o = els.measureReadoutOverlay;
+        const p = els.measureReadoutPanel;
+        if (o) o.innerHTML = html;
+        if (p) p.innerHTML = html;
+    };
+
+    const measure = initMeasurements({
+        scene, camera, renderer,
+        readoutEl: els.measureReadoutOverlay,
+        hudModeEl: els.hudMode,
+        toMeters, fmtLen
+    });
+    measure.attachCanvas(getDomElement());
+    renderHudModelInfo();
+
+    function updateMeasureUI(mode) {
+        const rail = soft('measureRail');
+        if (!rail) return;
+        rail.querySelectorAll('.toolbtn').forEach(btn => {
+            const active = btn.dataset.mode === mode;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+    }
+    els.measureMode.addEventListener('change', function () {
+        const mode = els.measureMode.value || 'none';
+        measure.setMode(mode);
+        updateMeasureUI(mode);
+        if (mode === 'none') {
+            window.updateReadout('<span class="muted">Ölçüm</span>');
+        }
+    });
+    (function wireMeasureRail() {
+        const rail = soft('measureRail');
+        if (!rail) return;
+        const btns = rail.querySelectorAll('.toolbtn');
+        if (!btns.length) return;
+
+        function applyMode(nextMode) {
+            const current = els.measureMode.value || 'none';
+            const mode = (current === nextMode) ? 'none' : nextMode;
+            els.measureMode.value = mode;
+            els.measureMode.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        btns.forEach(b => b.addEventListener('click', () => applyMode(b.dataset.mode)));
+        updateMeasureUI(els.measureMode.value || 'none');
+    })();
 
     // Clear / CSV
     els.clearMarks.addEventListener('click', function () { measure.clear(); });
     els.exportCSV.addEventListener('click', function () { measure.exportCSV(); });
 
-    // ===== Loader =====
+    // ---------- Loader ----------
     const loader = initLoader({
-        scene: scene, camera: camera, controls: controls, renderer: renderer,
+        scene, camera, controls, renderer,
         onAfterLoad: function (r) {
             const root = r.root, mesh = r.mesh;
-            lastRoot = root;
+
+            // BBox (ham birimde)
+            const size = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
+            bboxSizeRaw = size.clone();
+
+            // Üçgen sayısı
+            try {
+                triCountVal = countTriangles(root);
+                if (els.triCount) {
+                    els.triCount.textContent = triCountVal.toLocaleString('tr-TR');
+                    els.triCount.title = els.triCount.textContent;
+                }
+            } catch (e) { console.warn('Tri count failed:', e); }
+
+            // Sidebar “Boyut” alanı varsa doldur (opsiyonel)
+            if (els.bboxInfo) {
+                const x = fmtLen(bboxSizeRaw.x * metersPerUnit);
+                const y = fmtLen(bboxSizeRaw.y * metersPerUnit);
+                const z = fmtLen(bboxSizeRaw.z * metersPerUnit);
+                els.bboxInfo.textContent = joinDims(x, y, z);
+                els.bboxInfo.title = `${x} × ${y} × ${z}`;
+            }
+
+            // Ölçüm hedefi
             measure.setTargetMesh(mesh);
 
-            // BBox ve üçgen sayısı
-            const size = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
-            const x = fmtLen(size.x * metersPerUnit);
-            const y = fmtLen(size.y * metersPerUnit);
-            const z = fmtLen(size.z * metersPerUnit);
-            els.bboxInfo.textContent = joinDims(x, y, z);
-            els.bboxInfo.title = `${x} × ${y} × ${z}`;
-
-            try {
-                const tri = countTriangles(root);
-                els.triCount.textContent = tri.toLocaleString('tr-TR');
-                els.triCount.title = els.triCount.textContent;
-            } catch (e) { console.warn('Tri count failed:', e); }
+            // HUD’ı güncelle
             renderHudModelInfo();
         }
     });
@@ -464,7 +508,6 @@ function start() {
     els.loadBtn?.addEventListener('click', function () {
         loader.loadFromURL(els.modelUrl.value);
     });
-
     if (els.loadLocal && els.localFile) {
         els.loadLocal.addEventListener('click', function () {
             const f = els.localFile.files && els.localFile.files[0];
@@ -472,7 +515,6 @@ function start() {
             loader.loadFromFile(f);
         });
     }
-
     els.screenshotBtn?.addEventListener('click', function () {
         const a = document.createElement('a');
         a.href = renderer.domElement.toDataURL('image/png');
@@ -518,48 +560,26 @@ function start() {
                 if (v) lines.push(v);
             }
             els.publications.value = lines.join('\n');
-            if (rec.metersPerUnit) {
-                els.metersPerUnit.value = rec.metersPerUnit;
-                setMetersPerUnit(rec.metersPerUnit);
-            }
+
+            // Kart kaldırıldı; UI alanına yazmadan sadece state'e uygula
+            if (rec.metersPerUnit) setMetersPerUnit(rec.metersPerUnit);
         },
         onLoaded: function (items) { meta.seed(items); },
         fileInput: els.catalogFile,
         loadFileBtn: els.loadCatalogFile
     });
 
-    // Birim seçimleri
-    els.unitSelect.addEventListener('change', function () {
-        const v = els.unitSelect.value;
-        const map = { m: 1, cm: 0.01, mm: 0.001, ft: 0.3048, in: 0.0254 };
-        if (v === 'custom') { els.metersPerUnit.focus(); return; }
-        els.metersPerUnit.value = map[v];
-        setMetersPerUnit(map[v]);
-    });
-    els.metersPerUnit.addEventListener('change', function () {
-        setMetersPerUnit(parseFloat(els.metersPerUnit.value));
-    });
-
-    // Kalibrasyon
-    els.btnCalFromLast.addEventListener('click', function () {
-        const lastUnits = measure.getLastLengthUnits();
-        const realMeters = parseFloat(els.calReal.value);
-        if (!lastUnits || !isFinite(lastUnits)) { flash('Önce bir ölçüm yapın.'); return; }
-        if (!realMeters || !isFinite(realMeters)) { flash('Gerçek uzunluğu metre olarak girin.'); return; }
-        const mpu = realMeters / lastUnits;
-        els.metersPerUnit.value = mpu;
-        setMetersPerUnit(mpu);
-        flash('Kalibrasyon uygulandı.');
-    });
-
-    // Mobile panel toggle
-    const toggleBtn = document.getElementById('toggleSidebar');
+    // Mobil panel toggle
+    const toggleBtn = soft('toggleSidebar');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', function () {
             document.body.classList.toggle('sidebar-hidden');
             window.dispatchEvent(new Event('resize'));
         });
     }
+
+    // İlk senkron
+    syncViewBtn();
 
     // Otomatik yükle
     if (els.modelUrl.value) loader.loadFromURL(els.modelUrl.value);

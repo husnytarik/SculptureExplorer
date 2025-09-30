@@ -1,65 +1,183 @@
 {
+    "version": 1,
     "items": [
         {
-            "id": "venus",
-            "file": "./models/sc.glb",
+            "id": "venus-de-milo",
             "title": "Venus de Milo",
-            "category": "heykel",
+            "category": "Heykel",
             "type": "figür",
-            "period": "hellenistik",
-            "material": "mermer",
-            "culture": "antik yunan",
-            "geo": "milos",
-            "abstract": "Afrodit heykeli, kolları eksik.",
-            "metrics": {
-                "height_cm": 204
-            },
+            "period": "Helenistik",
+            "material": "Mermer",
+            "culture": "Antik Yunan",
+            "geo": "Melos Adası, Yunanistan",
+            "abstract": "MÖ 2. yy'a tarihlenen ünlü Afrodit heykeli.",
+            "metersPerUnit": 1,
+            "modelUrl": "./models/venus_de_milo.glb",
             "publications": [
                 {
-                    "title": "Louvre Catalog Entry",
-                    "url": "https://example.org/venus"
+                    "url": "https://sketchfab.com/3d-models/venus-de-milo-*"
                 }
             ]
         },
         {
-            "id": "Pedestal Delphic complex",
-            "file": "./models/Epigraphy.glb",
-            "title": "Augustus of Prima Porta",
-            "category": "heykel",
-            "type": "portre",
-            "period": "roma",
-            "material": "mermer",
-            "culture": "roma",
-            "geo": "vatikan",
-            "abstract": "Augustus Caesar zırhlı portresi.",
-            "metrics": {
-                "height_cm": 207
-            },
+            "id": "winged-victory-samothrace",
+            "title": "Samothrake Zaferi (Nike)",
+            "category": "Heykel",
+            "type": "figür",
+            "period": "Helenistik",
+            "material": "Mermer",
+            "culture": "Antik Yunan",
+            "geo": "Samothrake, Yunanistan",
+            "abstract": "Kanatlı Nike figürü, Louvre koleksiyonunda.",
+            "metersPerUnit": 1,
+            "modelUrl": "./models/winged_victory.glb",
             "publications": [
                 {
-                    "title": "Musei Vaticani scheda",
-                    "url": "https://example.org/augustus"
+                    "url": "https://sketchfab.com/3d-models/winged-victory-of-samothrace-*"
                 }
             ]
         },
         {
-            "id": "augustus",
-            "file": "./models/dc.glb",
-            "title": "Augustus of Prima Porta",
-            "category": "heykel",
-            "type": "portre",
-            "period": "roma",
-            "material": "mermer",
-            "culture": "roma",
-            "geo": "vatikan",
-            "abstract": "Augustus Caesar zırhlı portresi.",
-            "metrics": {
-                "height_cm": 207
-            },
+            "id": "michelangelo-david",
+            "title": "David",
+            "category": "Heykel",
+            "type": "figür",
+            "period": "Rönesans",
+            "material": "Mermer",
+            "culture": "İtalyan",
+            "geo": "Floransa, İtalya",
+            "abstract": "Michelangelo’nun başyapıtı.",
+            "metersPerUnit": 1,
+            "modelUrl": "./models/david.glb",
             "publications": [
                 {
-                    "title": "Musei Vaticani scheda",
-                    "url": "https://example.org/augustus"
+                    "url": "https://sketchfab.com/3d-models/david-michelangelo-*"
+                }
+            ]
+        },
+        {
+            "id": "bust-of-nefertiti",
+            "title": "Nefertiti Büstü",
+            "category": "Heykel",
+            "type": "büst",
+            "period": "MÖ 14. yy",
+            "material": "Kireçtaşı/Alçı",
+            "culture": "Antik Mısır",
+            "geo": "Amarna, Mısır",
+            "abstract": "Kraliçe Nefertiti’nin ikonik büstü.",
+            "metersPerUnit": 1,
+            "modelUrl": "./models/nefertiti.glb",
+            "publications": [
+                {
+                    "url": "https://sketchfab.com/3d-models/bust-of-nefertiti-*"
+                }
+            ]
+        },
+        {
+            "id": "terracotta-warrior",
+            "title": "Terrakotta Asker (Diz çöken okçu)",
+            "category": "Heykel",
+            "type": "figür",
+            "period": "Qin Hanedanı",
+            "material": "Terrakotta",
+            "culture": "Çin",
+            "geo": "Xi’an, Çin",
+            "abstract": "İmparator Qin Shi Huang’ın mezar ordusundan.",
+            "metersPerUnit": 1,
+            "modelUrl": "./models/terracotta_archer.glb",
+            "publications": [
+                {
+                    "url": "https://sketchfab.com/3d-models/terracotta-warrior-*"
+                }
+            ]
+        },
+        {
+            "id": "augustus-prima-porta",
+            "title": "Augustus of Prima Porta",
+            "category": "Heykel",
+            "type": "figür",
+            "period": "Roma İmparatorluğu",
+            "material": "Mermer",
+            "culture": "Roma",
+            "geo": "Prima Porta, İtalya",
+            "abstract": "İmparator Augustus’un zırhlı portresi.",
+            "metersPerUnit": 1,
+            "modelUrl": "./models/augustus_prima_porta.glb",
+            "publications": [
+                {
+                    "url": "https://sketchfab.com/3d-models/augustus-of-prima-porta-*"
+                }
+            ]
+        },
+        {
+            "id": "laocoon-group",
+            "title": "Laokoon ve Oğulları",
+            "category": "Heykel",
+            "type": "grup kompozisyon",
+            "period": "Helenistik",
+            "material": "Mermer",
+            "culture": "Rodos Okulu",
+            "geo": "Roma, İtalya",
+            "abstract": "Truva rahibi Laokoon’un dramı.",
+            "metersPerUnit": 1,
+            "modelUrl": "./models/laocoon.glb",
+            "publications": [
+                {
+                    "url": "https://sketchfab.com/3d-models/laocoon-and-his-sons-*"
+                }
+            ]
+        },
+        {
+            "id": "rodin-thinker",
+            "title": "Düşünen Adam",
+            "category": "Heykel",
+            "type": "figür",
+            "period": "19.–20. yy",
+            "material": "Bronz",
+            "culture": "Fransız",
+            "geo": "Paris, Fransa",
+            "abstract": "Auguste Rodin’in en bilinen eseri.",
+            "metersPerUnit": 1,
+            "modelUrl": "./models/thinker.glb",
+            "publications": [
+                {
+                    "url": "https://sketchfab.com/3d-models/the-thinker-rodin-*"
+                }
+            ]
+        },
+        {
+            "id": "discobolus",
+            "title": "Disk Atan (Discobolus)",
+            "category": "Heykel",
+            "type": "figür",
+            "period": "Klasik Yunan",
+            "material": "Mermer/Bronz kopyalar",
+            "culture": "Antik Yunan",
+            "geo": "Roma, İtalya (kopyalar)",
+            "abstract": "Myron’a atfedilen atlet figürü.",
+            "metersPerUnit": 1,
+            "modelUrl": "./models/discobolus.glb",
+            "publications": [
+                {
+                    "url": "https://sketchfab.com/3d-models/discobolus-*"
+                }
+            ]
+        },
+        {
+            "id": "moai",
+            "title": "Moai (Rapa Nui)",
+            "category": "Heykel",
+            "type": "monolit",
+            "period": "12.–15. yy",
+            "material": "Tüf",
+            "culture": "Rapa Nui",
+            "geo": "Paskalya Adası",
+            "abstract": "Rapa Nui uygarlığının devasa ada heykelleri.",
+            "metersPerUnit": 1,
+            "modelUrl": "./models/moai.glb",
+            "publications": [
+                {
+                    "url": "https://sketchfab.com/3d-models/moai-*"
                 }
             ]
         }

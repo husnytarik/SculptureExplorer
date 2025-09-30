@@ -28,7 +28,7 @@
         <!-- ===== VIEWER ===== -->
         <div class="viewer" id="viewer">
             <div class="overlay">
-                <span class="pill" id="hudMode">Model Görüntüleme ve Ölçüm</span>
+                <span id="hudInfo" class="hudline"></span>
             </div>
 
             <!-- Sağ dikey araç çubuğu -->
@@ -166,6 +166,42 @@
                 </div>
             </div>
 
+            <!-- Viewer içi filtre kısayolları (sağ alt) -->
+            <div class="viewer-filters" id="viewerFilters">
+                <div class="vf-group">
+                    <!-- Curvature -->
+                    <button class="toolbtn" id="btnCurv" aria-label="Curvature" aria-pressed="false">
+                        <span class="toolbtn__icon" aria-hidden="true">
+                            <!-- curve icon -->
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M4 18 C 9 6, 15 20, 20 6" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" fill="none" />
+                            </svg>
+                        </span>
+                        <span class="toolbtn__label">Curvature</span>
+                    </button>
+
+                    <!-- Curvature popover (üstte) -->
+                    <div class="filter-popover" id="curvPopover" hidden>
+                        <label class="mini">Güç
+                            <input id="curvAmt" type="range" min="0.01" max="200" value="80" />
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Edges / Sobel -->
+                <button class="toolbtn" id="btnEdges" aria-label="Kenar Vurgusu" aria-pressed="false">
+                    <span class="toolbtn__icon" aria-hidden="true">
+                        <!-- edges icon -->
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2" />
+                            <path d="M8 8 L16 16 M16 8 L8 16" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </span>
+                    <span class="toolbtn__label">Kenar Vurgusu</span>
+                </button>
+            </div>
+
             <!-- Ölçüm değerleri: viewer üzerinde -->
             <div class="measure-readout measure-readout--overlay" id="measureReadoutOverlay">
                 <span class="muted">Ölçüm</span>
@@ -182,81 +218,31 @@
                         <div class="col">
                             <input class="input" id="modelUrl" placeholder=".glb / .gltf URL" value="./models/sc.glb" />
                             <div class="grid">
-                                <button class="btn" id="loadBtn">URL'den Yükle</button>
-                                <button class="btn" id="screenshotBtn">PNG Kaydet</button>
-                            </div>
-
-                            <!-- ▼ İSTENEN: Görünüm panelini aç/kapat butonu -->
-                            <div class="grid">
-                                <button class="btn" id="toggleViewPanel">Işık & Görünüm Paneli</button>
-                            </div>
-
-                            <div class="stats">
-                                <div class="stat">
-                                    <span class="stat__label">Üçgen</span>
-                                    <span class="stat__value" id="triCount">-</span>
-                                </div>
-                                <div class="stat">
-                                    <span class="stat__label">Boyut</span>
-                                    <span class="stat__value" id="bboxInfo">-</span>
-                                </div>
-                                <div class="stat">
-                                    <span class="stat__label">Ölçek</span>
-                                    <span class="stat__value" id="scaleInfo">1.000</span>
-                                    <span class="stat__unit">m/birim</span>
-                                </div>
+                                <button class="btn" id="loadBtn">Yükle</button>
+                                <button class="btn" id="screenshotBtn">Görüntüyü Kaydet</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Ölçek & Birimler -->
-                    <div class="card">
-                        <h3>Ölçek & Birimler</h3>
-                        <div class="col">
-                            <div class="grid">
-                                <select id="unitSelect" class="select">
-                                    <option value="m">Metre (m)</option>
-                                    <option value="cm">Santimetre (cm)</option>
-                                    <option value="mm">Milimetre (mm)</option>
-                                    <option value="ft">Feet (ft)</option>
-                                    <option value="in">İnç (in)</option>
-                                    <option value="custom">Özel (m/birim)</option>
-                                </select>
-                                <input class="input" id="metersPerUnit" type="number" step="any" value="1"
-                                    placeholder="m/birim" />
-                            </div>
-                            <div class="grid">
-                                <input class="input" id="calReal" type="number" step="any"
-                                    placeholder="Gerçek uzunluk (metre)" />
-                                <button class="btn" id="btnCalFromLast">Son ölçümle kalibre et</button>
-                            </div>
-                            <span class="muted" style="font-size:12px">İpucu: Önce iki nokta ölçün, sonra gerçek
-                                uzunluğu (m) girip kalibre edin.</span>
-                        </div>
-                    </div>
+
 
                     <!-- Katalog -->
                     <div class="card">
-                        <h3>Koleksiyon (catalog.json)</h3>
+                        <h3>Koleksiyon</h3>
                         <div class="col">
-                            <div class="grid">
-                                <button class="btn" id="loadCatalog">Sunucudan Yükle</button>
-                                <button class="btn" id="applyMeta">Seçileni Uygula</button>
-                            </div>
-                            <div class="grid">
-                                <input type="file" id="catalogFile" accept=".json" class="input" />
-                                <button class="btn" id="loadCatalogFile">Dosyadan Katalog</button>
-                            </div>
+                            <button class="btn" id="loadCatalog">Sunucudan Yükle</button>
+
                             <select id="catalogSelect" class="select">
-                                <option value="">— Kayıt seç —</option>
+                                <option value="">— Eserler —</option>
                             </select>
                             <div id="catalogPreview" class="muted" style="font-size:12px"></div>
+                            <button class="btn" id="applyMeta">Modeli Görüntüle</button>
                         </div>
                     </div>
 
                     <!-- ÖLÇÜM ARAÇLARI KARTI KALDIRILDI -->
                     <!-- ▼ Ama main.js 'must' ile bazı id'leri bekliyor.
-               Bu nedenle görünmeyen (hidden) minimal DOM'u tutuyoruz. -->
+                    Bu nedenle görünmeyen (hidden) minimal DOM'u tutuyoruz. -->
                     <div class="hide" aria-hidden="true">
                         <select id="measureMode">
                             <option value="none">—</option>
@@ -270,69 +256,64 @@
                         <button id="exportCSV" type="button">csv</button>
                     </div>
 
-                    <!-- Filtreler -->
-                    <div class="card">
-                        <h3>Filtreler</h3>
-                        <div class="col">
-                            <div class="grid">
-                                <!-- RTI / Raking Light -->
-                                <div class="fx-group">
-                                    <label><input type="checkbox" id="fxRaking"> Raking Light (RTI)</label>
-                                    <div style="margin-left:1em;">
-                                        <label>Gain <input id="rGain" type="range" min="0.5" max="3" step="0.1"
-                                                value="1.2"></label>
-                                        <label>Wrap <input id="rWrap" type="range" min="0" max="0.6" step="0.05"
-                                                value="0.3"></label>
-                                    </div>
-                                </div>
-                                <label class="row" style="gap:8px;"><input type="checkbox" id="fxSsao"> SSAO (ortam
-                                    gölgeleme)</label>
-                                <div class="grid">
-                                    <label class="row" style="gap:8px;"><input type="checkbox" id="fxCurv"> Curvature
-                                        (Cavity)</label>
-                                    <label>Güç <input type="range" id="fxCurvAmt" class="slider" min="0.01" max="200"
-                                            value="80"></label>
-                                </div>
-                                <label class="row" style="gap:8px;"><input type="checkbox" id="fxEdges"> Kenar Vurgusu
-                                    (Sobel)</label>
-                            </div>
-                            <div class="grid">
-                                <select id="fxQuality" class="select">
-                                    <option value="low">Kalite: Düşük (mobil)</option>
-                                    <option value="high" selected>Kalite: Yüksek</option>
-                                </select>
-                                <button class="btn" id="btnRaking">Raking Işık (preset)</button>
-                                <button class="btn" id="btnFxReset">Filtreleri Sıfırla</button>
-                            </div>
-                            <span class="muted" style="font-size:12px">Mobilde performans için kaliteyi “Düşük”
-                                seçin.</span>
-                        </div>
-                    </div>
-
                     <!-- Meta -->
                     <div class="card">
                         <h3>Bilgi & Etiketler</h3>
                         <div class="col">
-                            <input class="input" id="title" placeholder="Eser adı" />
+                            <label class="mini" for="title">Eser adı</label>
+                            <input class="input" id="title" placeholder="Eser adı" readonly />
+
                             <div class="grid">
-                                <input class="input" id="category" placeholder="Kategori (ör. Heykel)" />
-                                <input class="input" id="type" placeholder="Tür (ör. büst, figür)" />
+                                <div class="col">
+                                    <label class="mini" for="category">Kategori</label>
+                                    <input class="input" id="category" placeholder="Örn: Heykel" readonly />
+                                </div>
+                                <div class="col">
+                                    <label class="mini" for="type">Tür</label>
+                                    <input class="input" id="type" placeholder="Örn: büst, figür" readonly />
+                                </div>
                             </div>
+
                             <div class="grid">
-                                <input class="input" id="period" placeholder="Dönem (ör. Roma)" />
-                                <input class="input" id="material" placeholder="Malzeme (ör. Mermer)" />
+                                <div class="col">
+                                    <label class="mini" for="period">Dönem</label>
+                                    <input class="input" id="period" placeholder="Örn: Roma" readonly />
+                                </div>
+                                <div class="col">
+                                    <label class="mini" for="culture">Kültür </label>
+                                    <input class="input" id="culture" placeholder="Örn: Etrüsk" readonly />
+                                </div>
                             </div>
+
                             <div class="grid">
-                                <input class="input" id="culture" placeholder="Kültür/Okul" />
-                                <input class="input" id="geo" placeholder="Konum (ülke/şehir/alan)" />
+                                <div class="col">
+
+                                    <label class="mini" for="title">Şu Anki Konumu</label>
+                                    <input class="input" id="title" placeholder="Örn: British Museum" readonly />
+                                </div>
+                                <div class="col">
+                                    <label class="mini" for="geo">Bulunduğu Konum</label>
+                                    <input class="input" id="geo" placeholder="Örn: Xhantos Antik Kenti" readonly />
+                                </div>
                             </div>
-                            <textarea class="input" id="abstract" rows="3"
-                                placeholder="Bilimsel özet / açıklama"></textarea>
-                            <textarea class="input" id="publications" rows="2"
-                                placeholder="Yayınlar (satır başına DOI/URL)"></textarea>
-                            <button class="btn" id="saveMeta">Bu modele metayı ata</button>
+                            <label class="mini" for="material">Malzeme</label>
+                            <input class="input" id="material" placeholder="Örn: Mermer" readonly />
+
+                            <label class="mini" for="abstract">Bilimsel özet / açıklama</label>
+                            <textarea class="input" id="abstract" rows="3" placeholder="Kısa açıklama"
+                                readonly></textarea>
+
+                            <label class="mini" for="publications">Yayınlar</label>
+                            <textarea class="input" id="publications" rows="2" placeholder="Her satıra bir DOI/URL"
+                                readonly></textarea>
+
+                            <div class="grid">
+                                <button class="btn" id="editMeta" data-editing="false">Düzenle</button>
+                                <button class="btn" id="saveMeta" disabled>Kaydet</button>
+                            </div>
                         </div>
                     </div>
+
 
                     <!-- Arama -->
                     <div class="card">
@@ -369,8 +350,6 @@
     </script>
 
     <!-- Entry modules -->
-    <script type="module" src="./js/rtiRaking.js"></script>
-    <script type="module" src="./js/filters.js"></script>
     <script type="module" src="./js/main.js"></script>
 </body>
 

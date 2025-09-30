@@ -415,11 +415,16 @@ button[data-variant="accent"]:hover,
 }
 
 .overlay {
-    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     top: 10px;
     left: 10px;
-    display: flex;
-    gap: 8px;
+    position: absolute;
+    z-index: 40;
+    /* güvenlik için öne çek */
+    pointer-events: none;
+    /* tıklamayı engelleme */
 }
 
 .pill {
@@ -894,4 +899,134 @@ canvas {
     background: var(--viewer-btn-active-bg);
     border-color: var(--viewer-btn-active-col);
     color: var(--viewer-btn-active-col);
+}
+
+/* Viewer içi filtre kısayolları (sağ alt) */
+.viewer-filters {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: flex;
+    gap: 8px;
+    z-index: 36;
+    /* toolrail(30) ve panel(35) üstünde */
+}
+
+/* Curvature butonu için popover'ı sabitlemek adına sarmalayıcı */
+.viewer-filters .vf-group {
+    position: relative;
+}
+
+/* Curvature popover (butonun üstünde açılır) */
+.filter-popover {
+    position: absolute;
+    right: 0;
+    bottom: 48px;
+    /* butonun üstünde */
+    background: var(--view-panel-bg);
+    border: 1px solid var(--view-panel-border);
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: var(--view-panel-shadow);
+}
+
+.filter-popover[hidden] {
+    display: none !important;
+}
+
+/* küçük ok */
+.filter-popover::after {
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    right: 14px;
+    border: 6px solid transparent;
+    border-top-color: var(--view-panel-bg);
+}
+
+/* slider genişliği */
+.filter-popover input[type="range"] {
+    width: 120px;
+}
+
+/* Viewer içindeki butonlar (zaten tintliydi; burada aynısını kullanıyoruz) */
+.viewer .toolbtn {
+    background: var(--viewer-btn-bg);
+    color: var(--tool-btn-color);
+    border: 1px solid var(--viewer-btn-border);
+    box-shadow: none;
+}
+
+.viewer .toolbtn:hover,
+.viewer .toolbtn:focus {
+    background: var(--viewer-btn-bg-hover);
+    border-color: var(--focus-border);
+}
+
+.viewer .toolbtn.is-active {
+    background: var(--viewer-btn-active-bg);
+    border-color: var(--viewer-btn-active-col);
+    color: var(--viewer-btn-active-col);
+}
+
+.hudline {
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-size: var(--fs-md, 13px);
+    font-weight: var(--fw-normal, 500);
+    line-height: 1.25;
+    color: var(--text-strong);
+}
+
+.hudline b {
+    font-weight: inherit !important;
+    color: inherit !important;
+}
+
+/* Üst soldaki Üçgen / Boyut / Ölçek metni (#hudMode) */
+#hudMode {
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    color: var(--text-strong);
+    /* koyu temada okunaklı */
+    box-shadow: none !important;
+}
+
+/* Alt soldaki "Ölçüm" readout (ve ölçüm değerleri) */
+.measure-readout--overlay {
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    max-width: none;
+    /* uzun satırlar sarılmasın istersen kaldırabilirsin */
+}
+
+/* İstersen metin boyutunu biraz büyütüp güçlendirebilirsin: */
+#hudMode,
+.measure-readout--overlay {
+    font-size: var(--fs-md);
+    font-weight: var(--fw-normal);
+}
+
+textarea {
+    resize: none;
+    /* hem yatay hem dikey kapalı */
+    width: 100%;
+    /* panel içinde tam genişlik */
+}
+
+/* Kilitli (readonly) görünüm için hafif ipucu */
+.input.is-readonly,
+textarea.is-readonly {
+    /* istersen görsel ipucu: */
+    /* opacity: .95; */
+    /* cursor: default; */
 }
