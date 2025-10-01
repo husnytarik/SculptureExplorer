@@ -1,1032 +1,253 @@
-/* ================================
-   THEME TOKENS — tek noktadan kontrol
-   ================================ */
+/* ========== THEME TOKENS ========== */
 :root {
-    /* Ana palet */
-    --bg: #444444;
-    /* sayfa arka planı — açık gri/beyaz */
-    --panel: #222222;
-    /* panel ve kart yüzeyi */
-    --surface: #ffffff;
-    /* input/kart içi beyaz */
-    --surface-2: #1f1f1f;
-    /* hafif gri yüzey */
-    --border: #22303d;
-    /* ince sınır */
-
-    --text: #bdbdbd;
-    /* ana metin koyu gri */
-    --text-strong: #ffffff;
-    /* başlık/metin vurgu */
-    --muted: #6b7280;
-    /* ikincil metin */
-
-    --accent: #3c5d5f;
-    /* modern mor vurgu */
-    --accent-2: #68afb3;
-
-    --ok: #16a34a;
-    /* yeşil onay */
-    --warn: #d97706;
-    /* turuncu uyarı */
-    --err: #dc2626;
-    /* kırmızı hata */
-
-    /* Nötr butonlar */
-    --btn-bg: #3c5d5f;
-    --btn-bg-hover: #22303d;
-    --btn-border: var(--border);
-    --btn-color: var(--text);
-
-    /* Kart/öğe */
-    --card-bg: var(--panel);
-    --item-bg: #222222;
-
-    /* FAB */
-    --fab-bg: #1f2937;
-    --fab-color: #f9fafb;
-
-    /* RGB tabanları (alpha’lı kullanımlar için) */
-    --black: 0, 0, 0;
-    --white: 255, 255, 255;
-
-    --accent-rgb: 124, 58, 237;
-    /**/
-
-    /* Viewer buton tinti (biraz renkli görünüm) */
-    --viewer-btn-bg: rgb(from var(--accent) r g b / .5);
-    --viewer-btn-bg-hover: rgb(from var(--accent-2) r g b / .16);
-    --viewer-btn-border: rgb(from var(--accent-2) r g b / .55);
-    --viewer-btn-active-bg: rgb(from var(--accent) r g b / .22);
-    --viewer-btn-active-col: var(--accent-2);
-
-    /* Işık & Görünüm paneli (açılır) */
-    --view-panel-bg: var(--panel);
-    /* solid açık kart */
-    --view-panel-border: var(--border);
-    --view-panel-shadow: 0 8px 24px rgba(0, 0, 0, .18);
-    --view-panel-blur: 8px;
-
-    /* Durum & etkileşim renkleri */
-    --hover-surface: rgba(var(--black), 0.03);
-    --hover-surface-strong: rgba(var(--black), 0.06);
-    --focus-border: #6366f1;
-    /* odak hattı mor tabanlı */
-    --focus-ring: rgba(124, 58, 237, 0.25);
-    --placeholder: #9ca3af;
-
-    /* Viewer & overlay */
-    --viewer-bg: #000000;
-    --overlay-bg: rgba(var(--black), .55);
-    --overlay-bg-strong: rgba(var(--black), .8);
-    --overlay-border: #1f2937;
-    --pill-bg: rgba(var(--black), .5);
-
-    /* Toolrail / butonlar */
-    --tool-btn-bg: rgba(var(--black), .55);
-    --tool-btn-bg-hover: rgba(var(--black), .7);
-    --tool-btn-active-bg: var(--accent);
-    --tool-btn-active-border: var(--accent);
-    --tool-btn-color: #ffffff;
-    --tool-label-bg: rgba(var(--black), .8);
-    --tool-label-color: #ffffff;
-
-    /* Kontroller */
-    --ctrl-bg: var(--surface-2);
-    --ctrl-color: var(--text);
-    --ctrl-border: var(--border);
-    --ctrl-bg-file-btn: #f1f5f9;
-    --ctrl-bg-file-btn-hover: #e2e8f0;
-    --select-caret: #6b7280;
-    --range-track: #e5e7eb;
-
-
-
-    /* Ölçüm readout */
-    --measure-text: var(--text);
-    --measure-emph: var(--accent);
-
-    /* Kompakt UI boyutları */
-    --radius-ctrl: 100px;
-    --radius-card: 8px;
-    --h-ctrl: 32px;
-    --pad-ctrl-x: 10px;
-    --pad-btn-x: 12px;
-
-    --view-panel-top: 56px;
-    --view-panel-right: 12px;
-    --view-panel-width: 320px;
-
-
-    /* === Font ailesi === */
-    --ff-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-    --ff-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", monospace;
-
-    /* === Ağırlıklar === */
-    --fw-normal: 400;
-    --fw-medium: 500;
-    --fw-semibold: 600;
-    --fw-bold: 700;
-
-    /* === Boyut ölçeği (typescale) === */
-    --fs-xs: 9px;
-    --fs-sm: 10px;
-    /* mevcut taban */
-    --fs-md: 12px;
-    --fs-lg: 14px;
-
-    /* === Satır yüksekliği === */
-    --lh-tight: 1.2;
-    --lh-normal: 1.45;
-    --lh-relaxed: 1.6;
-}
-
-:where(input, select, textarea, button, .btn) {
-    font-family: var(--ff-sans);
-    font-size: var(--fs-sm);
-    line-height: var(--lh-tight);
-    font-weight: var(--fw-normal);
-}
-
-
-/* ================================
-   GENEL
-   ================================ */
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    font-family: var(--ff-sans);
-    font-size: var(--fs-sm);
-    line-height: var(--lh-normal);
-    background: var(--bg);
-    color: var(--text);
-}
-
-/* ===== Layout ===== */
-.app {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    height: 100vh;
-    gap: 10px;
-    padding: 10px;
-}
-
-.viewer {
-    position: relative;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    background: var(--viewer-bg);
-    height: calc(100vh - 20px);
-}
-
-/* sağ kolon */
-.sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-/* panel + iç scroll */
-.sidepanel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 10px;
-    height: calc(100vh - 20px);
-    display: flex;
-    overflow-x: hidden;
-}
-
-.sidepanel__body {
-    overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-    overflow: auto;
-    padding-right: 6px;
-}
-
-/* ===== Kart ===== */
-.card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    padding: 10px 12px;
-    box-shadow: none;
-    transition: background .15s;
-}
-
-.card:hover {
-    background: var(--hover-surface);
-}
-
-.card h2,
-.card h3 {
-    font-size: var(--fs-sm);
-    margin: 0 0 6px;
-    color: var(--text);
-    font-weight: var(--fw-semibold);
-}
-
-/* satır/sütun aralıkları */
-.row {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-}
-
-.col {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-/* ===== Form Kontrolleri — tek tip, kompakt ===== */
-:where(input[type="text"], input[type="number"], input[type="search"], input[type="password"], select, textarea) {
-    height: var(--h-ctrl);
-    background: var(--ctrl-bg);
-    color: var(--ctrl-color);
-    border: 1px solid var(--ctrl-border);
-    border-radius: var(--radius-ctrl);
-    padding: 0 var(--pad-ctrl-x);
-    font-size: 12px;
-    outline: none;
-    transition: border-color .15s, box-shadow .15s, background .15s;
-}
-
-textarea {
-    min-height: 84px;
-    padding: 8px var(--pad-ctrl-x);
-}
-
-:where(input, select, textarea)::placeholder {
-    color: var(--placeholder);
-}
-
-:where(input, select, textarea):focus {
-    border-color: var(--focus-border);
-    box-shadow: 0 0 0 2px var(--focus-ring);
-}
-
-/* select oku minimal */
-select {
-    appearance: none;
-    background-image:
-        linear-gradient(45deg, transparent 50%, var(--select-caret) 50%),
-        linear-gradient(135deg, var(--select-caret) 50%, transparent 50%);
-    background-position: calc(100% - 18px) 52%, calc(100% - 12px) 52%;
-    background-size: 6px 6px, 6px 6px;
-    background-repeat: no-repeat;
-    padding-right: 30px;
-}
-
-/* file input */
-input[type="file"] {
-    background: var(--ctrl-bg);
-    color: var(--ctrl-color);
-}
-
-input[type="file"]::file-selector-button,
-input[type="file"]::-webkit-file-upload-button {
-    height: 28px;
-    padding: 0 10px;
-    margin-right: 10px;
-    border: 1px solid var(--ctrl-border);
-    border-radius: var(--radius-ctrl);
-    background: var(--ctrl-bg-file-btn);
-    color: var(--ctrl-color);
-    cursor: pointer;
-    transition: background .15s, border-color .15s;
-}
-
-input[type="file"]::file-selector-button:hover,
-input[type="file"]::-webkit-file-upload-button:hover {
-    background: var(--ctrl-bg-file-btn-hover);
-    border-color: var(--focus-border);
-}
-
-/* checkbox/radio/slider */
-input[type="checkbox"],
-input[type="radio"] {
-    accent-color: var(--accent);
-}
-
-input[type="range"] {
-    height: 8px;
-    background: var(--range-track);
-    border-radius: 4px;
-    accent-color: var(--accent);
-}
-
-/* genel input/select sınıflarınla uyum */
-.select,
-.input {
-    background: var(--panel);
-    color: var(--text-strong);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-ctrl);
-    padding: 0 var(--pad-ctrl-x);
-    width: 100%;
-    height: var(--h-ctrl);
-}
-
-.slider {
-    width: 100%;
-}
-
-/* ===== Butonlar — nötr & küçük ===== */
-button,
-.btn {
-    height: var(--h-ctrl);
-    padding: 0 var(--pad-btn-x);
-    line-height: 1;
-    border-radius: var(--radius-ctrl);
-    background: var(--btn-bg);
-    color: var(--btn-color);
-    border: 1px solid var(--btn-border);
-    cursor: pointer;
-    transition: background .15s, border-color .15s, filter .15s;
-}
-
-button:hover,
-.btn:hover {
-    background: var(--btn-bg-hover);
-    border-color: var(--focus-border);
-}
-
-.btn[aria-pressed="true"] {
-    outline: 2px solid var(--accent);
-}
-
-/* aksiyon vurgusu */
-button[data-variant="accent"],
-.btn[data-variant="accent"] {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-}
-
-button[data-variant="accent"]:hover,
-.btn[data-variant="accent"]:hover {
-    filter: brightness(1.05);
-}
-
-/* min-height ez */
-.btn,
-.input,
-.select {
-    min-height: var(--h-ctrl) !important;
-}
-
-/* ===== Küçük öğeler ===== */
-.badge {
-    padding: 2px 8px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    color: #cbd5e1;
-    font-size: var(--fs-xs);
-}
-
-.legend {
-    position: absolute;
-    left: 10px;
-    bottom: 10px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    background: var(--overlay-bg);
-    backdrop-filter: blur(6px);
-    padding: 8px 10px;
-    border: 1px solid var(--overlay-border);
-    border-radius: 12px;
-}
-
-.legend .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-}
-
-.overlay {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    top: 10px;
-    left: 10px;
-    position: absolute;
-    z-index: 40;
-    /* güvenlik için öne çek */
-    pointer-events: none;
-    /* tıklamayı engelleme */
-}
-
-.pill {
-    background: var(--pill-bg);
-    border: 1px solid var(--overlay-border);
-    padding: 8px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-}
-
-.muted {
-    color: var(--muted);
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
-
-.list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 220px;
-    overflow: auto;
-}
-
-.item {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 8px;
-    background: var(--item-bg);
-}
-
-.item h4 {
-    margin: 0 0 6px;
-    font-size: var(--fs-md);
-}
-
-.sep {
-    height: 1px;
-    background: var(--border);
-    margin: 8px 0;
-}
-
-canvas {
-    display: block;
-}
-
-/* Mobile friendliness */
-.overlay,
-.legend {
-    pointer-events: none;
-}
-
-/* fab */
-.fab {
-    position: fixed;
-    right: max(12px, env(safe-area-inset-right));
-    bottom: max(12px, env(safe-area-inset-bottom));
-    background: var(--fab-bg);
-    border: 1px solid var(--border);
-    color: var(--fab-color);
-    padding: 12px 14px;
-    border-radius: 999px;
-    font-size: 18px;
-    box-shadow: 0 4px 16px rgba(var(--black), .35);
-    z-index: 50;
-    display: none;
-}
-
-/* ——— Mobil düzen: sayfa scroll’u kilitli, sadece panel içi kayar ——— */
-@media (max-width: 1024px) {
-
-    html,
-    body {
-        height: 100%;
-        overflow: hidden;
-    }
-
-    .app {
-        grid-template-columns: 1fr;
-        grid-template-rows: 56vh 1fr;
-        height: 100vh;
-        height: 100svh;
-        padding: 10px;
-        gap: 10px;
-    }
-
-    .viewer {
-        height: 100%;
-        min-height: 0;
-    }
-
-    .sidebar {
-        min-height: 0;
-    }
-
-    .sidepanel {
-        height: 100%;
-        display: flex;
-    }
-
-    .sidepanel__body {
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding-right: 6px;
-    }
-
-    .grid {
-        grid-template-columns: 1fr;
-    }
-
-    .legend {
-        left: 8px;
-        bottom: 8px;
-    }
-}
-
-.sidebar-hidden .sidebar {
-    display: none;
-}
-
-.sidebar-hidden .app {
-    grid-template-columns: 1fr;
-}
-
-.sidebar-hidden .viewer {
-    height: calc(100vh - 20px);
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 1024px) {
-    .app {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto;
-        height: auto;
-        min-height: 100vh;
-        padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
-    }
-
-    .viewer {
-        height: 56vh;
-        min-height: 320px;
-    }
-
-    .sidepanel {
-        height: auto;
-    }
-
-    .sidepanel__body {
-        max-height: calc(44vh - 10px);
-        overflow: auto;
-    }
-
-    .grid {
-        grid-template-columns: 1fr;
-    }
-
-    .legend {
-        left: 8px;
-        bottom: 8px;
-    }
-}
-
-@media (max-width: 640px) {
-    .viewer {
-        height: 60vh;
-    }
-}
-
-/* =========================================================
-   Ölçüm çıktıları: overlay & panel varyantları
-   ========================================================= */
-.measure-readout {
-    font-size: var(--fs-sm);
-    color: var(--measure-text);
-}
-
-.measure-readout b {
-    color: var(--measure-emph);
-}
-
-/* Viewer üstü (konumlu) */
-.measure-readout--overlay {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    background: var(--overlay-bg);
-    backdrop-filter: blur(6px);
-    padding: 6px 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    z-index: 20;
-    max-width: 240px;
-}
-
-/* Panel içi (konumsuz, sade) */
-.measure-readout--panel {
-    background: transparent;
-    border: 1px dashed var(--border);
-    border-radius: 8px;
-    padding: 6px 8px;
-    color: var(--text);
-}
-
-/* =========================================================
-   Sağ dikey araç çubuğu (toolrail)
-   ========================================================= */
-.hide {
-    display: none !important;
-}
-
-.toolrail {
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 30;
-    pointer-events: auto;
-}
-
-.toolbtn {
-    position: relative;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: var(--tool-btn-bg);
-    border: 1px solid var(--border);
-    color: var(--tool-btn-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-appearance: none;
-    appearance: none;
-}
-
-.toolbtn:hover,
-.toolbtn:focus {
-    background: var(--tool-btn-bg-hover);
-    border-color: var(--focus-border);
-}
-
-.toolbtn.is-active {
-    background: var(--tool-btn-active-bg);
-    border-color: var(--tool-btn-active-border);
-    color: #fff;
-}
-
-.toolbtn__icon {
-    width: 20px;
-    height: 20px;
-    display: block;
-    line-height: 0;
-    font-size: 0;
-    letter-spacing: 0;
-    font-weight: 400;
-}
-
-.toolbtn__label {
-    position: absolute;
-    right: 44px;
-    top: 50%;
-    transform: translateY(-50%) translateX(8px);
-    opacity: 0;
-    pointer-events: none;
-    background: var(--tool-label-bg);
-    border: 1px solid var(--border);
-    color: var(--tool-label-color);
-    padding: 6px 8px;
-    border-radius: 8px;
-    font-size: 12px;
-    white-space: nowrap;
-    transition: opacity .15s, transform .15s;
-}
-
-.toolbtn:hover .toolbtn__label,
-.toolbtn:focus .toolbtn__label {
-    opacity: 1;
-    transform: translateY(-50%) translateX(0);
-}
-
-@media (max-width:1024px) {
-    .toolrail {
-        top: auto;
-        bottom: 10px;
-        transform: none;
-    }
-
-    .toolbtn:focus .toolbtn__label {
-        opacity: 1;
-        transform: translateY(-50%) translateX(0);
-    }
-}
-
-.toolbtn__icon svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
-/* --- Mini istatistikler: DİKEY (alt alta) düzen --- */
-.stats {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 6px;
-}
-
-.stat {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-}
-
-.stat__label {
-    font-size: var(--fs-xs);
-    color: var(--muted);
-    min-width: 64px;
-    flex-shrink: 0;
-}
-
-.stat__value {
-    flex: 1 1 auto;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: var(--fs-sm);
-    color: var(--text-strong);
-    font-variant-numeric: tabular-nums;
-    font-family: var(--ff-mono);
-}
-
-.stat__unit {
-    margin-left: 8px;
-    font-size: var(--fs-sm);
-    color: var(--muted);
-    flex-shrink: 0;
-}
-
-/* ========= Model Viewer içi Floating View Panel ========= */
-.view-fab {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 40px;
-    height: 40px;
-    border-radius: 999px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, .15);
-    cursor: pointer;
-    z-index: 5;
-}
-
-.view-fab svg {
-    width: 22px;
-    height: 22px;
-    stroke: var(--text);
-    fill: none;
-    stroke-width: 1.8;
-}
-
-.view-fab circle {
-    fill: var(--text);
-    stroke: none;
-}
-
-.view-panel {
-    position: absolute;
-    top: var(--view-panel-top);
-    right: var(--view-panel-right);
-    background: var(--view-panel-bg);
-    border: 1px solid var(--view-panel-border);
-    border-radius: 12px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: min(var(--view-panel-width), 36vw);
-    box-shadow: var(--view-panel-shadow);
-    backdrop-filter: blur(var(--view-panel-blur));
-    -webkit-backdrop-filter: blur(var(--view-panel-blur));
-    z-index: 35;
-}
-
-.view-panel[hidden] {
-    display: none !important;
-}
-
-.view-panel[hidden] {
-    display: none !important;
-}
-
-
-.view-panel .row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.view-panel .wrap {
-    flex-wrap: wrap;
-}
-
-.view-panel .mini {
-    font-size: var(--fs-sm);
-    color: var(--text);
-}
-
-.view-panel input[type="range"] {
-    width: 140px;
-}
-
-.view-panel .chip {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 6px 10px;
-    font-size: 12px;
-    color: var(--text);
-    cursor: pointer;
-}
-
-.view-panel .check {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.viewer-actions {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 36;
-    /* toolrail(30) ve panel(35) üstü */
-    display: flex;
-    gap: 8px;
-}
-
-/* Viewer içindeki toolbtn'ler */
-.viewer .toolbtn {
-    background: var(--viewer-btn-bg);
-    color: var(--tool-btn-color);
-    border: 1px solid var(--viewer-btn-border);
-    box-shadow: none;
-}
-
-.viewer .toolbtn:hover,
-.viewer .toolbtn:focus {
-    background: var(--viewer-btn-bg-hover);
-    border-color: var(--focus-border);
-}
-
-.viewer .toolbtn.is-active {
-    background: var(--viewer-btn-active-bg);
-    border-color: var(--viewer-btn-active-col);
-    color: var(--viewer-btn-active-col);
-}
-
-/* Viewer içi filtre kısayolları (sağ alt) */
-.viewer-filters {
-    position: absolute;
-    right: 12px;
-    bottom: 12px;
-    display: flex;
-    gap: 8px;
-    z-index: 36;
-    /* toolrail(30) ve panel(35) üstünde */
-}
-
-/* Curvature butonu için popover'ı sabitlemek adına sarmalayıcı */
-.viewer-filters .vf-group {
-    position: relative;
-}
-
-/* Curvature popover (butonun üstünde açılır) */
-.filter-popover {
-    position: absolute;
-    right: 0;
-    bottom: 48px;
-    /* butonun üstünde */
-    background: var(--view-panel-bg);
-    border: 1px solid var(--view-panel-border);
-    border-radius: 12px;
-    padding: 10px;
-    box-shadow: var(--view-panel-shadow);
-}
-
-.filter-popover[hidden] {
-    display: none !important;
-}
-
-/* küçük ok */
-.filter-popover::after {
-    content: "";
-    position: absolute;
-    bottom: -6px;
-    right: 14px;
-    border: 6px solid transparent;
-    border-top-color: var(--view-panel-bg);
-}
-
-/* slider genişliği */
-.filter-popover input[type="range"] {
-    width: 120px;
-}
-
-/* Viewer içindeki butonlar (zaten tintliydi; burada aynısını kullanıyoruz) */
-.viewer .toolbtn {
-    background: var(--viewer-btn-bg);
-    color: var(--tool-btn-color);
-    border: 1px solid var(--viewer-btn-border);
-    box-shadow: none;
-}
-
-.viewer .toolbtn:hover,
-.viewer .toolbtn:focus {
-    background: var(--viewer-btn-bg-hover);
-    border-color: var(--focus-border);
-}
-
-.viewer .toolbtn.is-active {
-    background: var(--viewer-btn-active-bg);
-    border-color: var(--viewer-btn-active-col);
-    color: var(--viewer-btn-active-col);
-}
-
-.hudline {
-    background: transparent !important;
-    border: 0 !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    font-size: var(--fs-md, 13px);
-    font-weight: var(--fw-normal, 500);
-    line-height: 1.25;
-    color: var(--text-strong);
-}
-
-.hudline b {
-    font-weight: inherit !important;
-    color: inherit !important;
-}
-
-/* Üst soldaki Üçgen / Boyut / Ölçek metni (#hudMode) */
-#hudMode {
-    background: transparent !important;
-    border: 0 !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    color: var(--text-strong);
-    /* koyu temada okunaklı */
-    box-shadow: none !important;
-}
-
-/* Alt soldaki "Ölçüm" readout (ve ölçüm değerleri) */
-.measure-readout--overlay {
-    background: transparent !important;
-    border: 0 !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    max-width: none;
-    /* uzun satırlar sarılmasın istersen kaldırabilirsin */
-}
-
-/* İstersen metin boyutunu biraz büyütüp güçlendirebilirsin: */
-#hudMode,
-.measure-readout--overlay {
-    font-size: var(--fs-md);
-    font-weight: var(--fw-normal);
-}
-
-textarea {
-    resize: none;
-    /* hem yatay hem dikey kapalı */
-    width: 100%;
-    /* panel içinde tam genişlik */
-}
-
-/* Kilitli (readonly) görünüm için hafif ipucu */
-.input.is-readonly,
-textarea.is-readonly {
-    /* istersen görsel ipucu: */
-    /* opacity: .95; */
-    /* cursor: default; */
-}
+  /* Palet */
+  --bg:#444444; --panel:#222222; --surface:#ffffff; --surface-2:#1f1f1f; --border:#22303d;
+  --text:#bdbdbd; --text-strong:#ffffff; --muted:#6b7280;
+  --accent:#3c5d5f; --accent-2:#68afb3;
+
+  /* Uyarılar */
+  --ok:#16a34a; --warn:#d97706; --err:#dc2626;
+
+  /* Kontroller */
+  --ctrl-bg:var(--surface-2); --ctrl-color:var(--text); --ctrl-border:var(--border);
+  --range-track:#e5e7eb; --select-caret:#6b7280;
+
+  /* Butonlar */
+  --btn-bg:#3c5d5f; --btn-bg-hover:#22303d; --btn-border:var(--border); --btn-color:var(--text);
+
+  /* Toolrail butonları */
+  --tool-btn-bg:rgba(0,0,0,.55);
+  --tool-btn-bg-hover:rgba(0,0,0,.70);
+  --tool-btn-active-bg:var(--accent);
+  --tool-btn-active-border:var(--accent);
+  --tool-btn-color:#fff;
+  --tool-label-bg:rgba(0,0,0,.80);
+  --tool-label-color:#fff;
+
+  /* Viewer & overlay */
+  --viewer-bg:#000;
+  --overlay-bg:rgba(0,0,0,.55);
+  --overlay-bg-strong:rgba(0,0,0,.8);
+  --overlay-border:#1f2937;
+  --pill-bg:rgba(0,0,0,.5);
+  --overlay-safe:40px;
+
+  /* Viewer kısayol buton tinti */
+  --viewer-btn-bg: rgb(from var(--accent) r g b / .50);
+  --viewer-btn-bg-hover: rgb(from var(--accent-2) r g b / .16);
+  --viewer-btn-border: rgb(from var(--accent-2) r g b / .55);
+  --viewer-btn-active-bg: rgb(from var(--accent) r g b / .22);
+  --viewer-btn-active-col: var(--accent-2);
+
+  /* View panel */
+  --view-panel-bg:var(--panel); --view-panel-border:var(--border);
+  --view-panel-shadow:0 8px 24px rgba(0,0,0,.18); --view-panel-blur:8px;
+  --view-panel-top:56px; --view-panel-right:12px; --view-panel-width:320px;
+
+  /* Durum */
+  --hover-surface:rgba(0,0,0,.03); --hover-surface-strong:rgba(0,0,0,.06);
+  --focus-border:#6366f1; --focus-ring:rgba(124,58,237,.25); --placeholder:#9ca3af;
+
+  /* Ölçüm metni */
+  --measure-text:var(--text); --measure-emph:var(--accent);
+
+  /* Boyutlar */
+  --radius-ctrl:100px; --radius-card:8px; --h-ctrl:32px; --pad-ctrl-x:10px; --pad-btn-x:12px;
+
+  /* Tipografi */
+  --ff-sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif;
+  --ff-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+  --fw-normal:400; --fw-medium:500; --fw-semibold:600; --fw-bold:700;
+  --fs-xs:9px; --fs-sm:10px; --fs-md:12px; --fs-lg:14px;
+  --lh-tight:1.2; --lh-normal:1.45; --lh-relaxed:1.6;
+
+  /* HUD satırı */
+  --hud-line-size:var(--fs-sm);
+  --hud-line-weight:var(--fw-medium);
+  --hud-line-color:var(--text-strong);
+}
+
+/* ========== GENEL ========== */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:var(--ff-sans); font-size:var(--fs-sm); line-height:var(--lh-normal);
+  background:var(--bg); color:var(--text);
+}
+
+/* ========== LAYOUT ========== */
+.app{
+  display:grid; grid-template-columns:1fr 360px; height:100vh; gap:10px; padding:10px;
+}
+.viewer{
+  position:relative; border:1px solid var(--border); border-radius:16px;
+  overflow:hidden; background:var(--viewer-bg); width:100%;
+}
+.sidebar{display:flex; flex-direction:column; gap:10px; min-height:0}
+
+/* Panel scroll sadece içerikte */
+.sidepanel{
+  background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:10px;
+  display:flex; min-height:0; height:calc(100vh - 20px); overflow-x:hidden;
+}
+.sidepanel__body{
+  flex:1 1 auto; min-height:0; display:flex; flex-direction:column; gap:10px; width:100%;
+  overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding-right:6px;
+}
+
+/* Kart */
+.card{background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-card); padding:10px 12px; transition:background .15s}
+.card:hover{background:var(--hover-surface)}
+.card h2,.card h3{font-size:var(--fs-sm); margin:0 0 6px; color:var(--text); font-weight:var(--fw-semibold)}
+
+.row{display:flex; gap:6px; align-items:center}
+.col{display:flex; flex-direction:column; gap:6px}
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+canvas{display:block}
+.muted{color:var(--muted)}
+.hide{display:none !important}
+
+/* ========== FORM ========== */
+:where(input[type="text"],input[type="number"],input[type="search"],input[type="password"],select,textarea){
+  height:var(--h-ctrl); background:var(--ctrl-bg); color:var(--ctrl-color);
+  border:1px solid var(--ctrl-border); border-radius:var(--radius-ctrl); padding:0 var(--pad-ctrl-x);
+  font-size:12px; outline:none; transition:border-color .15s, box-shadow .15s, background .15s;
+}
+:where(input,select,textarea)::placeholder{color:var(--placeholder)}
+:where(input,select,textarea):focus{border-color:var(--focus-border); box-shadow:0 0 0 2px var(--focus-ring)}
+textarea{min-height:84px; padding:8px var(--pad-ctrl-x); resize:none; width:100%}
+select{
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--select-caret) 50%),linear-gradient(135deg,var(--select-caret) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 52%, calc(100% - 12px) 52%;
+  background-size:6px 6px,6px 6px; background-repeat:no-repeat; padding-right:30px;
+}
+input[type="checkbox"],input[type="radio"]{accent-color:var(--accent)}
+input[type="range"]{height:8px; background:var(--range-track); border-radius:4px; accent-color:var(--accent)}
+.select,.input{background:var(--panel); color:var(--text-strong); border:1px solid var(--border); border-radius:var(--radius-ctrl); padding:0 var(--pad-ctrl-x); width:100%; height:var(--h-ctrl)}
+
+/* ========== BUTON ========== */
+button,.btn{
+  height:var(--h-ctrl); padding:0 var(--pad-btn-x); line-height:1; border-radius:var(--radius-ctrl);
+  background:var(--btn-bg); color:var(--btn-color); border:1px solid var(--btn-border);
+  cursor:pointer; transition:background .15s, border-color .15s, filter .15s;
+}
+button:hover,.btn:hover{background:var(--btn-bg-hover); border-color:var(--focus-border)}
+.btn[aria-pressed="true"]{outline:2px solid var(--accent)}
+button[data-variant="accent"],.btn[data-variant="accent"]{background:var(--accent); border-color:var(--accent); color:#fff}
+button[data-variant="accent"]:hover,.btn[data-variant="accent"]:hover{filter:brightness(1.05)}
+.btn,.input,.select{min-height:var(--h-ctrl) !important}
+
+/* ========== OVERLAY & HUD ========== */
+.overlay{position:absolute; top:10px; left:10px; display:flex; flex-direction:column; gap:2px; z-index:40; pointer-events:none}
+.pill{background:var(--pill-bg); border:1px solid var(--overlay-border); padding:8px 10px; border-radius:999px; font-size:12px}
+
+.measure-readout{font-size:inherit; color:inherit}
+.measure-readout b{color:var(--measure-emph)}
+.measure-readout--overlay{
+  position:absolute; bottom:10px; left:10px;
+  background:transparent !important; border:0 !important; padding:0 !important; border-radius:0 !important;
+  backdrop-filter:none !important; -webkit-backdrop-filter:none !important; max-width:none;
+}
+
+#hudInfo,.measure-readout--overlay{
+  font-family:var(--ff-sans); font-weight:var(--hud-line-weight);
+  font-size:var(--hud-line-size); line-height:1.25; color:var(--hud-line-color) !important; letter-spacing:.01em;
+}
+#hudInfo b{font-weight:inherit; color:inherit}
+#hudMode{display:none}
+
+/* ========== TOOLRAIL / BUTON KÜMELERİ ========== */
+/* Sağ üst: ışık & görünüm */
+.viewer-actions{
+  position:absolute; top:10px; right:max(10px, env(safe-area-inset-right)); z-index:36;
+  display:flex; gap:6px;
+}
+
+/* Sağ orta: ölçüm rayı */
+.toolrail{
+  position:absolute; top:50%; right:max(10px, env(safe-area-inset-right)); transform:translateY(-50%);
+  z-index:30; display:flex; flex-direction:column; gap:6px;
+}
+.toolrail .toolbtn + .toolbtn{margin-top:6px} /* gap fallback */
+
+.toolbtn{
+  position:relative; width:40px; height:40px; border-radius:10px;
+  background:var(--tool-btn-bg); border:1px solid var(--border); color:var(--tool-btn-color);
+  display:flex; align-items:center; justify-content:center; padding:0; box-sizing:border-box; appearance:none;
+}
+.toolbtn:hover,.toolbtn:focus{background:var(--tool-btn-bg-hover); border-color:var(--focus-border)}
+.toolbtn.is-active{background:var(--tool-btn-active-bg); border-color:var(--tool-btn-active-border); color:#fff}
+.toolbtn__icon{width:20px; height:20px; display:block; line-height:0; font-size:0}
+.toolbtn__icon svg{width:100%; height:100%; display:block}
+.toolbtn__label{
+  position:absolute; right:44px; top:50%; transform:translateY(-50%) translateX(8px); opacity:0; pointer-events:none;
+  background:var(--tool-label-bg); border:1px solid var(--border); color:var(--tool-label-color);
+  padding:6px 8px; border-radius:8px; font-size:12px; white-space:nowrap; transition:opacity .15s, transform .15s;
+}
+.toolbtn:hover .toolbtn__label,.toolbtn:focus .toolbtn__label{opacity:1; transform:translateY(-50%) translateX(0)}
+
+/* Sağ alt: filtre kısayolları */
+.viewer-filters{
+  position:absolute; right:max(12px, env(safe-area-inset-right)); bottom:max(12px, env(safe-area-inset-bottom));
+  z-index:36; display:flex; gap:6px;
+}
+.viewer-filters > * + *{margin-left:6px} /* gap fallback */
+
+.viewer .toolbtn{
+  background:var(--viewer-btn-bg); color:var(--tool-btn-color); border:1px solid var(--viewer-btn-border); box-shadow:none;
+}
+.viewer .toolbtn:hover,.viewer .toolbtn:focus{background:var(--viewer-btn-bg-hover); border-color:var(--focus-border)}
+.viewer .toolbtn.is-active{background:var(--viewer-btn-active-bg); border-color:var(--viewer-btn-active-col); color:var(--viewer-btn-active-col)}
+
+/* Curvature popover */
+.viewer-filters .vf-group{position:relative}
+.filter-popover{
+  position:absolute; right:0; bottom:48px;
+  background:var(--view-panel-bg); border:1px solid var(--view-panel-border); border-radius:12px; padding:10px;
+  box-shadow:var(--view-panel-shadow);
+}
+.filter-popover[hidden]{display:none !important}
+.filter-popover::after{
+  content:""; position:absolute; bottom:-6px; right:14px; border:6px solid transparent; border-top-color:var(--view-panel-bg);
+}
+.filter-popover input[type="range"]{width:120px}
+
+/* ========== VIEW PANEL ========== */
+.view-panel{
+  position:absolute; top:var(--view-panel-top); right:var(--view-panel-right);
+  background:var(--view-panel-bg); border:1px solid var(--view-panel-border); border-radius:12px; padding:10px;
+  display:flex; flex-direction:column; gap:8px; width:min(var(--view-panel-width),36vw);
+  box-shadow:var(--view-panel-shadow); backdrop-filter:blur(var(--view-panel-blur)); -webkit-backdrop-filter:blur(var(--view-panel-blur));
+  z-index:35;
+}
+.view-panel[hidden]{display:none !important}
+.view-panel .row{display:flex; align-items:center; gap:10px}
+.view-panel .wrap{flex-wrap:wrap}
+.view-panel .mini{font-size:var(--fs-sm); color:var(--text)}
+.view-panel input[type="range"]{width:140px}
+.view-panel .chip{background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:6px 10px; font-size:12px; color:var(--text); cursor:pointer}
+
+/* ========== RESPONSIVE (MOBILE ≤1024px) ========== */
+@media (max-width:1024px){
+  html,body{height:100svh; overflow:hidden; overscroll-behavior:none}
+  body{position:fixed; inset:0; width:100%}
+
+  .app{
+    grid-template-columns:1fr; grid-template-rows:56vh 1fr;
+    height:100%; padding:10px; gap:10px;
+  }
+  .viewer{height:auto; min-height:0}
+  .sidepanel{min-height:0; display:flex; height:100%}
+  .sidepanel__body{flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding-right:6px}
+
+  .measure-readout--overlay{
+    left:max(10px, env(safe-area-inset-left));
+    bottom:max(10px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ========== SIDEBAR TOGGLE ========== */
+.sidebar-hidden .sidebar{display:none}
+.sidebar-hidden .app{grid-template-columns:1fr}
+.sidebar-hidden .viewer{height:calc(100vh - 20px)}
