@@ -42,7 +42,7 @@ export function renderResults(container, list) {
         return;
     }
     for (var i = 0; i < list.length; i++) {
-        var r = list[i];
+        const r = list[i];
         var el = document.createElement('div'); el.className = 'item';
         var html = '<h4>' + escapeHTML(r.title || '(adsız)') + '</h4>' +
             '<div class="row" style="flex-wrap:wrap; gap:6px">' +
@@ -53,5 +53,25 @@ export function renderResults(container, list) {
             '<div class="muted">' + escapeHTML(((r.abstract || '') + '').slice(0, 120)) + '…</div>';
         el.innerHTML = html;
         container.appendChild(el);
+        el.dataset.itemId = r.id || r.uid || r.key || '';
+        el.style.cursor = 'pointer';
+        el.tabIndex = 0;              // klavye ile de seçilebilir olsun
+        el.setAttribute('role', 'button');
+
+        el.addEventListener('click', function () {
+            // Tüm item objesini de detayda yolluyoruz ki gerekirse URL, başlık vs. oradan okunsun
+            window.dispatchEvent(new CustomEvent('select-item', { detail: { item: r } }));
+        });
+
+        // (İsteğe bağlı: klavye desteği)
+        el.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+                ev.preventDefault();
+                el.click();
+            }
+        });
     }
 }
+
+/* --- EK: default export (mevcut named export'lara dokunmadan) --- */
+export default { flash, escapeHTML, badge, fmt, fmtLen, renderResults };

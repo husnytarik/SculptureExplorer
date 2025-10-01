@@ -1,64 +1,92 @@
-import { renderResults } from './ui.js';
-
-
-const DB = [];
-
+// /js/metadata.js
+// @ts-nocheck
+import { renderResults, escapeHTML } from './ui.js';
 
 export function initMetadata({ inputs, saveBtn, resultsEl, queryInput, btnSearch, btnSimilar, getCurrentId }) {
+    const DB = [];
+
+    function applyRecord(rec) {
+        // Formu doldur
+        Object.entries(inputs || {}).forEach(([k, el]) => {
+            if (!el) return;
+            el.value = (rec?.[k] ?? '');
+        });
+        // İsteyen main.js yakalasın (model URL varsa oradan yükleyebilir)
+        resultsEl?.dispatchEvent(new CustomEvent('meta-pick', { detail: rec }));
+    }
+
+    // Formu kaydet -> DB'ye ekle (CASE KORUNUR)
     function save() {
-        const id = (getCurrentId() || '').trim();
-        const rec = Object.fromEntries(Object.entries(inputs).map(([k, el]) => [k, (el.value || '').trim().toLowerCase()]));
-        rec.id = id;
-        const i = DB.findIndex(d => d.id === id);
-        if (i >= 0) DB[i] = { ...DB[i], ...rec }; else DB.push(rec);
-        renderResults(resultsEl, DB.slice(-10));
+        const rec = Object.fromEntries(
+            Object.entries(inputs).map(([k, el]) => [k, (el.value || '').trim()])
+        );
+        rec.id = getCurrentId ? getCurrentId() : ('id-' + Date.now());
+        DB.push(rec);
+        renderResults(resultsEl, DB, { onPick: applyRecord });
     }
-    function tokens(s) { return (s || '').toLowerCase().split(/[^a-z0-9çğıöşü]+/i).filter(Boolean); }
+
+    // Basit arama (case-insensitive)
     function search(q) {
-        const terms = tokens(q);
-        if (!terms.length) return DB.slice(0, 10);
-        return DB.filter(rec => terms.every(t => Object.values(rec).some(v => (v || '').includes && v.includes(t))));
+        const terms = (q || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+        return DB.filter(rec =>
+            terms.every(t =>
+                Object.values(rec).some(v => (v != null) && (v + '').toLowerCase().includes(t))
+            )
+        );
     }
+
+    function tokens(s) {
+        return String(s || '').toLowerCase().split(/\W+/).filter(Boolean);
+    }
+
     function jaccard(a, b) {
-        const SA = new Set(tokens(a));
-        const SB = new Set(tokens(b));
-        const inter = new Set([...SA].filter(x => SB.has(x))).size;
-        const uni = new Set([...SA, ...SB]).size || 1;
-        return inter / uni;
-    }
-    function similarToCurrent() {
-        const id = (getCurrentId() || '').trim();
-        const me = DB.find(d => d.id === id); if (!me) return [];
-        const key = ['category', 'type', 'period', 'material', 'culture', 'geo'].map(k => me[k]).join(' ');
-        return DB.filter(d => d.id !== id)
-            .map(d => ({ rec: d, score: jaccard(key, ['category', 'type', 'period', 'material', 'culture', 'geo'].map(k => d[k]).join(' ')) }))
-            .sort((a, b) => b.score - a.score).slice(0, 10).map(x => x.rec);
+        const A = new Set(a), B = new Set(b);
+        const inter = [...A].filter(x => B.has(x)).length;
+        const uni = new Set([...A, ...B]).size;
+        return uni ? inter / uni : 0;
     }
 
+    function similarTo(idOrText) {
+        const base = typeof idOrText === 'string'
+            ? DB.find(r => r.id === idOrText) || { title: idOrText }
+            : { title: '' };
+        const tok = tokens(base.title);
+        const scored = DB.map(r => ({ r, s: jaccard(tok, tokens(r.title)) }));
+        scored.sort((a, b) => b.s - a.s);
+        return scored.slice(0, 20).map(x => x.r);
+    }
 
-    // wire
-    saveBtn.addEventListener('click', save);
-    btnSearch.addEventListener('click', () => renderResults(resultsEl, search(queryInput.value)));
-    btnSimilar.addEventListener('click', () => renderResults(resultsEl, similarToCurrent()));
+    btnSearch?.addEventListener('click', () => {
+        const list = search(queryInput?.value);
+        renderResults(resultsEl, list, { onPick: applyRecord });
+    });
 
+    btnSimilar?.addEventListener('click', () => {
+        const id = getCurrentId?.();
+        const list = similarTo(id || (queryInput?.value || ''));
+        renderResults(resultsEl, list, { onPick: applyRecord });
+    });
 
-    return {
-        seed(items) {
-            for (const it of items || []) {
-                DB.push({
-                    id: it.file || it.title,
-                    title: (it.title || '').toLowerCase(),
-                    category: (it.category || '').toLowerCase(),
-                    type: (it.type || '').toLowerCase(),
-                    period: (it.period || '').toLowerCase(),
-                    material: (it.material || '').toLowerCase(),
-                    culture: (it.culture || '').toLowerCase(),
-                    geo: (it.geo || '').toLowerCase(),
-                    abstract: (it.abstract || '').toLowerCase(),
-                });
-            }
-            renderResults(resultsEl, DB.slice(-10));
-        },
-        getDB() { return DB; }
-    };
+    saveBtn?.addEventListener('click', save);
+
+    // Katalogtan gelen kayıtları DB'ye koy (CASE KORUNUR)
+    function seed(items) {
+        const norm = (items || []).map(rec => ({
+            id: rec.id || rec.url || ('rec-' + Math.random().toString(36).slice(2)),
+            title: rec.title || '',
+            category: rec.category || '',
+            type: rec.type || '',
+            period: rec.period || '',
+            material: rec.material || '',
+            culture: rec.culture || '',
+            geo: rec.geo || '',
+            abstract: rec.abstract || '',
+            publications: (rec.publications || []).map(p => p.doi || p.url || p.title || '').join('\n'),
+            modelUrl: rec.url || rec.modelUrl || ''
+        }));
+        DB.splice(0, DB.length, ...norm);
+        renderResults(resultsEl, DB, { onPick: applyRecord });
+    }
+
+    return { seed, save, search, similarTo };
 }

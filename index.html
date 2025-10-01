@@ -128,8 +128,8 @@
 
             <div class="view-panel" id="viewPanel" hidden>
                 <div class="row gap8">
-                    <button class="chip" id="btnPerspective" title="Perspective">Persp</button>
-                    <button class="chip" id="btnOrtho" title="Orthographic">Ortho</button>
+                    <button class="chip" id="btnPerspective" title="Perspective">Perspective</button>
+                    <button class="chip" id="btnOrtho" title="Orthographic">Orthographic</button>
                     <label class="mini">FOV
                         <input id="fovSlider" type="range" min="20" max="120" value="45">
                     </label>
@@ -149,7 +149,7 @@
                         <input id="intensity" type="range" min="0" max="1000" value="120">
                     </label>
                     <label class="mini">Arka Plan
-                        <input id="bgColor" type="color" value="#000000">
+                        <input id="bgColor" type="color" value="#a0b3cf">
                     </label>
                 </div>
 
@@ -212,7 +212,7 @@
         <div class="sidebar">
             <div class="sidepanel">
                 <div class="sidepanel__body">
-                    <!-- Model -->
+                    <!-- Model 
                     <div class="card">
                         <h3>Model</h3>
                         <div class="col">
@@ -222,20 +222,16 @@
                                 <button class="btn" id="screenshotBtn">Görüntüyü Kaydet</button>
                             </div>
                         </div>
-                    </div>
-
-
-
+                    </div>-->
                     <!-- Katalog -->
                     <div class="card">
                         <h3>Koleksiyon</h3>
                         <div class="col">
-                            <button class="btn" id="loadCatalog">Sunucudan Yükle</button>
+                            <button class="btn" id="loadCatalog">Yükle</button>
 
-                            <select id="catalogSelect" class="select">
-                                <option value="">— Eserler —</option>
+                            <select id="catalogSelect" class="select placeholder-centered">
+                                <option value="" disabled selected>Koleksiyon Yükleyin</option>
                             </select>
-                            <div id="catalogPreview" class="muted" style="font-size:12px"></div>
                             <button class="btn" id="applyMeta">Modeli Görüntüle</button>
                         </div>
                     </div>
@@ -258,7 +254,7 @@
 
                     <!-- Meta -->
                     <div class="card">
-                        <h3>Bilgi & Etiketler</h3>
+                        <h3>Bilgi</h3>
                         <div class="col">
                             <label class="mini" for="title">Eser adı</label>
                             <input class="input" id="title" placeholder="Eser adı" readonly />
@@ -322,7 +318,7 @@
                             <input class="input" id="q" placeholder="Ara: kategori, dönem, malzeme, kültür, konum…" />
                             <div class="grid">
                                 <button class="btn" id="btnSearch">Ara</button>
-                                <button class="btn" id="btnSimilar">Bu modele benzer</button>
+                                <button class="btn" id="btnSimilar">Benzer Eserler</button>
                             </div>
                             <div class="list" id="results"></div>
                         </div>

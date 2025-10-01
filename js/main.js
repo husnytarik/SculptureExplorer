@@ -21,7 +21,7 @@ function must(id) {
         console.error(msg);
         flash(msg);
     }
-    return document.getElementById(id) || null;
+    return el;
 }
 function soft(id) { return document.getElementById(id) || null; }
 
@@ -76,22 +76,15 @@ function joinDims(a, b, c) {
     const ua = (a.match(rx) || [])[1];
     const ub = (b.match(rx) || [])[1];
     const uc = (c.match(rx) || [])[1];
-    if (ua && ua === ub && ua === uc) {
-        return `${a.replace(rx, '')} × ${b.replace(rx, '')} × ${c}`;
-    }
+    if (ua && ua === ub && ua === uc) return `${a.replace(rx, '')} × ${b.replace(rx, '')} × ${c}`;
     return `${a} × ${b} × ${c}`;
 }
 
 function start() {
     const els = {
         viewer: must('viewer'),
-        modelUrl: must('modelUrl'),
-        loadBtn: must('loadBtn'),
-        screenshotBtn: must('screenshotBtn'),
-        localFile: soft('localFile'),
-        loadLocal: soft('loadLocal'),
 
-        // İstatistikler (opsiyonel olabilir)
+        // İstatistikler (opsiyonel)
         triCount: soft('triCount'),
         bboxInfo: soft('bboxInfo'),
         scaleInfo: soft('scaleInfo'),
@@ -107,7 +100,7 @@ function start() {
         measureReadoutOverlay: soft('measureReadoutOverlay') || soft('measureReadout') || null,
         measureReadoutPanel: soft('measureReadoutPanel') || null,
 
-        hudMode: document.getElementById('hudMode'), // opsiyonel (ölçüm modülüne geçer)
+        hudMode: soft('hudMode'),
         exportCSV: must('exportCSV'),
         clearMarks: must('clearMarks'),
 
@@ -133,58 +126,53 @@ function start() {
         // Katalog
         loadCatalog: must('loadCatalog'),
         catalogSelect: must('catalogSelect'),
-        catalogPreview: must('catalogPreview'),
+        catalogPreview: soft('catalogPreview'),       // <<< opsiyonel
         applyMeta: must('applyMeta'),
         catalogFile: soft('catalogFile'),
         loadCatalogFile: soft('loadCatalogFile'),
+
+        // View panel toggles
+        viewPanel: soft('viewPanel'),
+        btnViewPanel: soft('btnViewPanel'),
+        altToggleBtn: soft('toggleViewPanel'),
     };
 
+    // === Meta düzenleme kilidi ===
     function metaFields() {
         return [
             els.title, els.category, els.type, els.period,
             els.material, els.culture, els.geo, els.abstract, els.publications
         ].filter(Boolean);
     }
-
     function setMetaEditable(on) {
         metaFields().forEach(el => {
             if ('readOnly' in el) el.readOnly = !on;
-            // görsel ipucu için class
             el.classList.toggle('is-readonly', !on);
         });
-        // Kaydet sadece düzenleme açıkken aktif
         if (els.saveMeta) els.saveMeta.disabled = !on;
-
-        // Düzenle butonu durumu
         if (els.editMeta) {
             els.editMeta.textContent = on ? 'Vazgeç' : 'Düzenle';
             els.editMeta.setAttribute('aria-pressed', on ? 'true' : 'false');
             els.editMeta.dataset.editing = on ? 'true' : 'false';
         }
     }
-
-    // başta kilitli başlat:
     setMetaEditable(false);
+    els.editMeta?.addEventListener('click', () =>
+        setMetaEditable(!(els.editMeta?.dataset.editing === 'true'))
+    );
 
-    // butonu bağla:
-    els.editMeta.addEventListener('click', () => {
-        const now = els.editMeta.dataset.editing === 'true';
-        setMetaEditable(!now);
-    });
+    // === STATE ===
+    let metersPerUnit = 1.0;
+    let bboxSizeRaw = null;
+    let triCountVal = null;
+    let currentModelId = ''; // katalogdan yüklenen aktif model
 
-    // ---------- STATE ----------
-    let metersPerUnit = 1.0;     // Kart kaldırıldığı için default 1
-    let bboxSizeRaw = null;      // THREE.Vector3 | null
-    let triCountVal = null;      // number | null
-
-    // HUD satırı (Üçgen • Boyut • Ölçek)
+    // HUD satırı
     let hudInfoEl = null;
     function renderHudModelInfo() {
         const hud = hudInfoEl || ensureHudInfo(els.viewer);
         if (!hud) return;
-
         const triText = (triCountVal != null) ? triCountVal.toLocaleString('tr-TR') : '-';
-
         let dimsText = '-';
         if (bboxSizeRaw) {
             const x = fmtLen(bboxSizeRaw.x * metersPerUnit);
@@ -192,23 +180,15 @@ function start() {
             const z = fmtLen(bboxSizeRaw.z * metersPerUnit);
             dimsText = joinDims(x, y, z);
         }
-
         const mpuText = (isFinite(metersPerUnit) ? metersPerUnit.toFixed(3) : '-');
-
-        // düz metin
         hud.textContent = `Üçgen: ${triText} • Boyut: ${dimsText} • Ölçek: ${mpuText} m/birim`;
     }
-
     function setMetersPerUnit(v) {
         metersPerUnit = Number(v) || 1;
-
-        // (varsa) yandaki "Ölçek" alanını güncelle
         if (els.scaleInfo) {
             els.scaleInfo.textContent = metersPerUnit.toFixed(3);
             els.scaleInfo.title = els.scaleInfo.textContent + ' m/birim';
         }
-
-        // (varsa) yandaki "Boyut" alanını güncelle
         if (bboxSizeRaw && els.bboxInfo) {
             const x = fmtLen(bboxSizeRaw.x * metersPerUnit);
             const y = fmtLen(bboxSizeRaw.y * metersPerUnit);
@@ -216,205 +196,19 @@ function start() {
             els.bboxInfo.textContent = joinDims(x, y, z);
             els.bboxInfo.title = `${x} × ${y} × ${z}`;
         }
-
         renderHudModelInfo();
-        if (typeof requestRender === 'function') requestRender();
+        requestRender?.();
     }
     function toMeters(x) { return x * metersPerUnit; }
 
-    // ---------- SAHNE ----------
+    // === SAHNE ===
     const s = initScene(els.viewer);
     const renderer = s.renderer, scene = s.scene, camera = s.camera, controls = s.controls;
 
-    // HUD & Readout elementlerini garanti altına al
     hudInfoEl = ensureHudInfo(els.viewer);
     ensureMeasureOverlay(els.viewer);
 
-    // Ölçüm Readout bridge (overlay + panel birlikte güncellensin)
-    if (typeof window.updateReadout !== 'function') {
-        window.updateReadout = function (html) {
-            const o = ensureMeasureOverlay(els.viewer);
-            o.innerHTML = html;
-            const p = document.getElementById('measureReadoutPanel');
-            if (p) p.innerHTML = html;
-        };
-    }
-
-    // GRID toggle
-    const gridToggle = soft('gridToggle');
-    if (gridToggle && grid) {
-        grid.visible = !!gridToggle.checked;
-        gridToggle.addEventListener('change', function () {
-            grid.visible = !!gridToggle.checked;
-            requestRender();
-        });
-    }
-
-    // Arka plan rengi
-    const bgColor = soft('bgColor');
-    if (bgColor) {
-        const c = new THREE.Color(bgColor.value || '#5a5a5a');
-        renderer.setClearColor(c, 1);
-        requestRender();
-        bgColor.addEventListener('input', function () {
-            const c = new THREE.Color(bgColor.value);
-            renderer.setClearColor(c, 1);
-            requestRender();
-        });
-    }
-
-    // Işık
-    const lighting = initLighting({
-        scene: scene,
-        renderer: renderer,
-        azimuth: els.azimuth,
-        elevation: els.elevation,
-        intensity: els.intensity,
-        grayscale: els.grayscale
-    });
-
-    // Directional kapalı/açık
-    const dirOff = soft('dirOff');
-    if (dirOff) dirOff.addEventListener('change', function () {
-        lighting.sun.visible = !dirOff.checked;
-        requestRender();
-    });
-
-    // Postprocess: sadece Curvature + Edges
-    const filters = initFilters({ renderer, scene, camera, setRenderOverride });
-    window.addEventListener('resize', () => { if (filters && filters.resize) filters.resize(); });
-
-    // --- FOV / CAMERA MODE ---
-    const fovSlider = soft('fovSlider');
-    if (fovSlider) {
-        setFov(Number(fovSlider.value || 45));
-        requestRender();
-        fovSlider.addEventListener('input', () => {
-            setFov(Number(fovSlider.value));
-            requestRender();
-        });
-    }
-    const btnPerspective = soft('btnPerspective');
-    if (btnPerspective) {
-        btnPerspective.addEventListener('click', () => {
-            switchToPerspective();
-            if (filters.setCamera) filters.setCamera(getCamera());
-            requestRender();
-        });
-    }
-    const btnOrtho = soft('btnOrtho');
-    if (btnOrtho) {
-        btnOrtho.addEventListener('click', () => {
-            switchToOrthographic();
-            if (filters.setCamera) filters.setCamera(getCamera());
-            requestRender();
-        });
-    }
-
-    // --- Işık & Görünüm panel toggle ---
-    const viewPanel = soft('viewPanel');
-    const btnViewPanel = soft('btnViewPanel');
-    const altToggleBtn = soft('toggleViewPanel');
-
-    function syncViewBtn() {
-        if (!btnViewPanel || !viewPanel) return;
-        const opened = !viewPanel.hidden;
-        btnViewPanel.classList.toggle('is-active', opened);
-        btnViewPanel.setAttribute('aria-pressed', opened ? 'true' : 'false');
-    }
-    function toggleViewPanel() {
-        if (!viewPanel) return;
-        viewPanel.hidden = !viewPanel.hidden;
-        syncViewBtn();
-        requestRender?.();
-    }
-    btnViewPanel?.addEventListener('click', toggleViewPanel);
-    altToggleBtn?.addEventListener('click', toggleViewPanel);
-
-    // Panel dışına tıklayınca kapat
-    document.addEventListener('mousedown', (e) => {
-        if (!viewPanel || viewPanel.hidden) return;
-        const inside = viewPanel.contains(e.target);
-        const onToggle = btnViewPanel?.contains(e.target) || altToggleBtn?.contains?.(e.target);
-        if (!inside && !onToggle) {
-            viewPanel.hidden = true;
-            syncViewBtn();
-        }
-    });
-
-    // --- Viewer Filters (sağ alt) ---
-    const btnCurv = soft('btnCurv');
-    const btnEdges = soft('btnEdges');
-    const curvPopover = soft('curvPopover');
-    const curvAmt = soft('curvAmt');
-
-    let curvEnabled = false;
-    let edgesEnabled = false;
-
-    function setBtnState(btn, on) {
-        if (!btn) return;
-        btn.classList.toggle('is-active', !!on);
-        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    }
-
-    // Curvature toggle + popover
-    if (btnCurv) {
-        if (curvPopover) curvPopover.hidden = true; // başlangıçta gizli
-        btnCurv.addEventListener('click', () => {
-            curvEnabled = !curvEnabled;
-            filters.enableCurvature(curvEnabled);
-            setBtnState(btnCurv, curvEnabled);
-
-            if (curvPopover) curvPopover.hidden = !curvEnabled;
-            if (curvEnabled && curvAmt) {
-                filters.setCurvatureStrength((Number(curvAmt.value) || 80) / 100);
-            }
-            requestRender();
-        });
-    }
-    if (curvAmt) {
-        curvAmt.addEventListener('input', () => {
-            if (curvEnabled) {
-                filters.setCurvatureStrength((Number(curvAmt.value) || 80) / 100);
-                requestRender();
-            }
-        });
-    }
-
-    // Edges toggle
-    if (btnEdges) {
-        btnEdges.addEventListener('click', () => {
-            edgesEnabled = !edgesEnabled;
-            filters.enableEdges(edgesEnabled);
-            setBtnState(btnEdges, edgesEnabled);
-            requestRender();
-        });
-    }
-
-    // Curvature popover dışına tıklanınca sadece popover gizle (efekt açık kalsın)
-    document.addEventListener('mousedown', (e) => {
-        if (!curvPopover || curvPopover.hidden) return;
-        const inside = curvPopover.contains(e.target);
-        const onBtn = btnCurv?.contains(e.target);
-        if (!inside && !onBtn) curvPopover.hidden = true;
-    });
-
-    // ESC ile kapatmalar
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            // ölçüm modu açıksa kapat
-            if ((els.measureMode.value || 'none') !== 'none') {
-                els.measureMode.value = 'none';
-                els.measureMode.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            // view panel açıksa kapat
-            if (viewPanel && !viewPanel.hidden) { viewPanel.hidden = true; syncViewBtn(); }
-            // curvature popover açıksa kapat
-            if (curvPopover && !curvPopover.hidden) curvPopover.hidden = true;
-        }
-    });
-
-    // ---------- Ölçüm ----------
+    // Ölçüm readout (tek tanım)
     window.updateReadout = function (html) {
         const o = els.measureReadoutOverlay;
         const p = els.measureReadoutPanel;
@@ -422,6 +216,160 @@ function start() {
         if (p) p.innerHTML = html;
     };
 
+    // Grid
+    const gridToggle = soft('gridToggle');
+    if (gridToggle && grid) {
+        grid.visible = !!gridToggle.checked;
+        gridToggle.addEventListener('change', () => { grid.visible = !!gridToggle.checked; requestRender(); });
+    }
+
+    // === Viewer arka planı: tek kaynak CSS var(--viewer-bg) ===
+    const bgColor = soft('bgColor');
+    const viewerEl = els.viewer;
+
+    function cssVar(el, name, fallback = '#000000') {
+        const v = getComputedStyle(el).getPropertyValue(name).trim();
+        return v || fallback;
+    }
+    function toHex(c) {
+        const v = c.toLowerCase();
+        if (v.startsWith('#')) return v;
+        const m = v.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (m) {
+            const r = Number(m[1]), g = Number(m[2]), b = Number(m[3]);
+            const h = (n) => n.toString(16).padStart(2, '0');
+            return `#${h(r)}${h(g)}${h(b)}`;
+        }
+        return '#000000';
+    }
+
+    const defaultCss = cssVar(viewerEl, '--viewer-bg', '#000000');
+    const defaultHex = toHex(defaultCss);
+    renderer.setClearColor(new THREE.Color(defaultHex), 1);
+    requestRender();
+
+    if (bgColor) {
+        if (!bgColor.value) bgColor.value = defaultHex;
+        bgColor.addEventListener('input', () => {
+            const hex = bgColor.value || defaultHex;
+            viewerEl.style.setProperty('--viewer-bg', hex);
+            renderer.setClearColor(new THREE.Color(hex), 1);
+            requestRender();
+        });
+    }
+
+    // Işık
+    const lighting = initLighting({
+        scene, renderer,
+        azimuth: els.azimuth, elevation: els.elevation, intensity: els.intensity, grayscale: els.grayscale
+    });
+    soft('dirOff')?.addEventListener('change', e => { lighting.sun.visible = !e.target.checked; requestRender(); });
+
+    // Post-process (Curvature + Edges)
+    const filters = initFilters({ renderer, scene, camera, setRenderOverride });
+    window.addEventListener('resize', () => { filters?.resize?.(); });
+
+    // Kamera/FOV
+    const fovSlider = soft('fovSlider');
+    if (fovSlider) {
+        setFov(Number(fovSlider.value || 45)); requestRender();
+        fovSlider.addEventListener('input', () => { setFov(Number(fovSlider.value)); requestRender(); });
+    }
+    soft('btnPerspective')?.addEventListener('click', () => { switchToPerspective(); filters.setCamera?.(getCamera()); requestRender(); });
+    soft('btnOrtho')?.addEventListener('click', () => { switchToOrthographic(); filters.setCamera?.(getCamera()); requestRender(); });
+
+    // === Işık & Görünüm paneli — butonun ALTINDA ===
+    const viewPanel = els.viewPanel;
+    const btnViewPanel = els.btnViewPanel;
+    const altToggleBtn = els.altToggleBtn;
+
+    function syncViewBtn() {
+        if (!btnViewPanel || !viewPanel) return;
+        const opened = !viewPanel.hidden;
+        btnViewPanel.classList.toggle('is-active', opened);
+        btnViewPanel.setAttribute('aria-pressed', opened ? 'true' : 'false');
+    }
+    function placeViewPanelUnderBtn() {
+        if (!viewPanel || !btnViewPanel) return;
+        const wasHidden = viewPanel.hidden; if (wasHidden) viewPanel.hidden = false;
+
+        const vr = els.viewer.getBoundingClientRect();
+        const br = btnViewPanel.getBoundingClientRect();
+        const pr = viewPanel.getBoundingClientRect();
+        const GAP = 8, PAD = 10;
+
+        let top = (br.bottom - vr.top) + GAP;
+        let right = Math.max(PAD, vr.right - br.right);
+
+        const maxTop = vr.height - pr.height - PAD;
+        if (top > maxTop) top = (br.top - vr.top) - pr.height - GAP;
+        top = Math.max(PAD, Math.min(top, maxTop));
+
+        Object.assign(viewPanel.style, { top: `${top}px`, right: `${right}px`, left: 'auto', bottom: 'auto' });
+        if (wasHidden) viewPanel.hidden = true;
+    }
+    function openViewPanel() { if (!viewPanel) return; viewPanel.hidden = false; placeViewPanelUnderBtn(); syncViewBtn(); }
+    function closeViewPanel() { if (!viewPanel) return; viewPanel.hidden = true; syncViewBtn(); }
+    function onViewBtnClick() { if (viewPanel.hidden) openViewPanel(); else closeViewPanel(); }
+
+    btnViewPanel?.addEventListener('click', onViewBtnClick);
+    altToggleBtn?.addEventListener('click', onViewBtnClick);
+    document.addEventListener('mousedown', (e) => {
+        if (!viewPanel || viewPanel.hidden) return;
+        const inside = viewPanel.contains(e.target);
+        const onToggle = btnViewPanel?.contains(e.target) || altToggleBtn?.contains?.(e.target);
+        if (!inside && !onToggle) closeViewPanel();
+    });
+    window.addEventListener('resize', () => { if (!viewPanel?.hidden) placeViewPanelUnderBtn(); });
+
+    // === Viewer Filters (sağ alt) ===
+    const btnCurv = soft('btnCurv');
+    const btnEdges = soft('btnEdges');
+    const curvPopover = soft('curvPopover');
+    const curvAmt = soft('curvAmt');
+    let curvEnabled = false, edgesEnabled = false;
+
+    function setBtnState(btn, on) { if (!btn) return; btn.classList.toggle('is-active', !!on); btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+    if (btnCurv) {
+        if (curvPopover) curvPopover.hidden = true;
+        btnCurv.addEventListener('click', () => {
+            curvEnabled = !curvEnabled;
+            filters.enableCurvature(curvEnabled);
+            setBtnState(btnCurv, curvEnabled);
+            if (curvPopover) curvPopover.hidden = !curvEnabled;
+            if (curvEnabled && curvAmt) filters.setCurvatureStrength((Number(curvAmt.value) || 80) / 100);
+            requestRender();
+        });
+    }
+    curvAmt?.addEventListener('input', () => {
+        if (curvEnabled) { filters.setCurvatureStrength((Number(curvAmt.value) || 80) / 100); requestRender(); }
+    });
+    btnEdges?.addEventListener('click', () => {
+        edgesEnabled = !edgesEnabled;
+        filters.enableEdges(edgesEnabled);
+        setBtnState(btnEdges, edgesEnabled);
+        requestRender();
+    });
+    document.addEventListener('mousedown', (e) => {
+        if (!curvPopover || curvPopover.hidden) return;
+        const inside = curvPopover.contains(e.target);
+        const onBtn = btnCurv?.contains(e.target);
+        if (!inside && !onBtn) curvPopover.hidden = true;
+    });
+
+    // ESC kısayolu
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if ((els.measureMode.value || 'none') !== 'none') {
+                els.measureMode.value = 'none';
+                els.measureMode.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            if (viewPanel && !viewPanel.hidden) closeViewPanel();
+            if (curvPopover && !curvPopover.hidden) curvPopover.hidden = true;
+        }
+    });
+
+    // === Ölçüm ===
     const measure = initMeasurements({
         scene, camera, renderer,
         readoutEl: els.measureReadoutOverlay,
@@ -432,8 +380,7 @@ function start() {
     renderHudModelInfo();
 
     function updateMeasureUI(mode) {
-        const rail = soft('measureRail');
-        if (!rail) return;
+        const rail = soft('measureRail'); if (!rail) return;
         rail.querySelectorAll('.toolbtn').forEach(btn => {
             const active = btn.dataset.mode === mode;
             btn.classList.toggle('is-active', active);
@@ -444,16 +391,11 @@ function start() {
         const mode = els.measureMode.value || 'none';
         measure.setMode(mode);
         updateMeasureUI(mode);
-        if (mode === 'none') {
-            window.updateReadout('<span class="muted">Ölçüm</span>');
-        }
+        if (mode === 'none') window.updateReadout('<span class="muted">Ölçüm</span>');
     });
     (function wireMeasureRail() {
-        const rail = soft('measureRail');
-        if (!rail) return;
-        const btns = rail.querySelectorAll('.toolbtn');
-        if (!btns.length) return;
-
+        const rail = soft('measureRail'); if (!rail) return;
+        const btns = rail.querySelectorAll('.toolbtn'); if (!btns.length) return;
         function applyMode(nextMode) {
             const current = els.measureMode.value || 'none';
             const mode = (current === nextMode) ? 'none' : nextMode;
@@ -463,22 +405,18 @@ function start() {
         btns.forEach(b => b.addEventListener('click', () => applyMode(b.dataset.mode)));
         updateMeasureUI(els.measureMode.value || 'none');
     })();
+    els.clearMarks.addEventListener('click', () => measure.clear());
+    els.exportCSV.addEventListener('click', () => measure.exportCSV());
 
-    // Clear / CSV
-    els.clearMarks.addEventListener('click', function () { measure.clear(); });
-    els.exportCSV.addEventListener('click', function () { measure.exportCSV(); });
-
-    // ---------- Loader ----------
+    // === Loader ===
     const loader = initLoader({
         scene, camera, controls, renderer,
         onAfterLoad: function (r) {
             const root = r.root, mesh = r.mesh;
 
-            // BBox (ham birimde)
+            // BBox & üçgen
             const size = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
             bboxSizeRaw = size.clone();
-
-            // Üçgen sayısı
             try {
                 triCountVal = countTriangles(root);
                 if (els.triCount) {
@@ -487,7 +425,6 @@ function start() {
                 }
             } catch (e) { console.warn('Tri count failed:', e); }
 
-            // Sidebar “Boyut” alanı varsa doldur (opsiyonel)
             if (els.bboxInfo) {
                 const x = fmtLen(bboxSizeRaw.x * metersPerUnit);
                 const y = fmtLen(bboxSizeRaw.y * metersPerUnit);
@@ -496,33 +433,12 @@ function start() {
                 els.bboxInfo.title = `${x} × ${y} × ${z}`;
             }
 
-            // Ölçüm hedefi
             measure.setTargetMesh(mesh);
-
-            // HUD’ı güncelle
             renderHudModelInfo();
         }
     });
 
-    // MODEL
-    els.loadBtn?.addEventListener('click', function () {
-        loader.loadFromURL(els.modelUrl.value);
-    });
-    if (els.loadLocal && els.localFile) {
-        els.loadLocal.addEventListener('click', function () {
-            const f = els.localFile.files && els.localFile.files[0];
-            if (!f) { flash('Bir .glb/.gltf dosyası seçin.'); return; }
-            loader.loadFromFile(f);
-        });
-    }
-    els.screenshotBtn?.addEventListener('click', function () {
-        const a = document.createElement('a');
-        a.href = renderer.domElement.toDataURL('image/png');
-        a.download = 'screenshot.png';
-        a.click();
-    });
-
-    // META / ARAMA
+    // === META / ARAMA ===
     const meta = initMetadata({
         inputs: {
             title: els.title, category: els.category, type: els.type, period: els.period,
@@ -533,17 +449,80 @@ function start() {
         queryInput: els.q,
         btnSearch: els.btnSearch,
         btnSimilar: els.btnSimilar,
-        getCurrentId: function () { return (els.modelUrl.value || '').trim(); }
+        getCurrentId: () => currentModelId
     });
 
-    // KATALOG
+    // >>> ARAMA SONUCUNA TIKLANINCA MODELİ YÜKLE <<<
+    els.results.addEventListener('meta-pick', (ev) => {
+        const rec = ev.detail || {};
+        if (rec.modelUrl) {
+            currentModelId = rec.modelUrl;
+            loader.loadFromURL(rec.modelUrl);
+        }
+        if (rec.metersPerUnit) setMetersPerUnit(rec.metersPerUnit);
+    });
+
+    /* ===================== EKLENDİ: "benzer eserler / arama kartı tıklandığında" ===================== */
+    // ui.js tarafı her öğe için window.dispatchEvent(new CustomEvent('select-item', { detail: { item: r } })) atıyor.
+    // Burada o olayı yakalayıp aynı yükleme işini yapıyoruz. Diğer özelliklere DOKUNMADAN.
+    function applyRecordMetaToPanel(rec) {
+        if (!rec) return;
+        if (typeof rec.title !== 'undefined') els.title.value = rec.title || '';
+        if (typeof rec.category !== 'undefined') els.category.value = rec.category || '';
+        if (typeof rec.type !== 'undefined') els.type.value = rec.type || '';
+        if (typeof rec.period !== 'undefined') els.period.value = rec.period || '';
+        if (typeof rec.material !== 'undefined') els.material.value = rec.material || '';
+        if (typeof rec.culture !== 'undefined') els.culture.value = rec.culture || '';
+        if (typeof rec.geo !== 'undefined') els.geo.value = rec.geo || '';
+        if (typeof rec.abstract !== 'undefined') els.abstract.value = rec.abstract || '';
+        if (typeof rec.publications !== 'undefined') {
+            let pubs = rec.publications;
+
+            // normalize: array değilse diziye çevir
+            if (Array.isArray(pubs)) {
+                // olduğu gibi
+            } else if (typeof pubs === 'string') {
+                // satır bazlı string gelmiş olabilir
+                pubs = pubs.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+            } else if (pubs == null) {
+                pubs = [];
+            } else {
+                // tek nesne gelmiş olabilir
+                pubs = [pubs];
+            }
+
+            // her elemanı stringe indirgeme
+            const lines = pubs.map(p => {
+                if (typeof p === 'string') return p;
+                if (p && (p.doi || p.url || p.title)) return p.doi || p.url || p.title;
+                try { return JSON.stringify(p); } catch { return ''; }
+            }).filter(Boolean);
+
+            els.publications.value = lines.join('\n');
+        }
+    }
+    function resolveModelUrlFromRec(rec) {
+        return rec?.modelUrl || rec?.assetUrl || rec?.url || (rec?.files && rec.files.model) || '';
+    }
+    window.addEventListener('select-item', (e) => {
+        const rec = e.detail?.item || e.detail || {};
+        const url = resolveModelUrlFromRec(rec);
+        if (!url) { console.warn('[select-item] modelUrl bulunamadı', rec); return; }
+        currentModelId = url;
+        loader.loadFromURL(url);
+        if (rec.metersPerUnit) setMetersPerUnit(rec.metersPerUnit);
+        applyRecordMetaToPanel(rec);
+    });
+    /* =================== /EKLENDİ =================== */
+
+    // === KATALOG — yükleme buradan ===
     initCatalog({
         loadBtn: els.loadCatalog,
         selectEl: els.catalogSelect,
-        previewEl: els.catalogPreview,
+        previewEl: els.catalogPreview,                 // yoksa catalog.js zaten no-op
         applyBtn: els.applyMeta,
-        setModelUrl: function (url) { els.modelUrl.value = url; },
-        loadByUrl: function (url) { loader.loadFromURL(url); },
+        setModelUrl: (url) => { /* model input yok; no-op */ },
+        loadByUrl: (url) => { currentModelId = url; loader.loadFromURL(url); }, // <<< önemli
         fillMeta: function (rec) {
             els.title.value = rec.title || '';
             els.category.value = rec.category || '';
@@ -553,15 +532,8 @@ function start() {
             els.culture.value = rec.culture || '';
             els.geo.value = rec.geo || '';
             els.abstract.value = rec.abstract || '';
-            const pubs = (rec.publications || []);
-            const lines = [];
-            for (let i = 0; i < pubs.length; i++) {
-                const p = pubs[i], v = p.doi || p.url || p.title;
-                if (v) lines.push(v);
-            }
-            els.publications.value = lines.join('\n');
-
-            // Kart kaldırıldı; UI alanına yazmadan sadece state'e uygula
+            const pubs = rec.publications || [];
+            els.publications.value = pubs.map(p => (p.doi || p.url || p.title)).filter(Boolean).join('\n');
             if (rec.metersPerUnit) setMetersPerUnit(rec.metersPerUnit);
         },
         onLoaded: function (items) { meta.seed(items); },
@@ -570,22 +542,13 @@ function start() {
     });
 
     // Mobil panel toggle
-    const toggleBtn = soft('toggleSidebar');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', function () {
-            document.body.classList.toggle('sidebar-hidden');
-            window.dispatchEvent(new Event('resize'));
-        });
-    }
-
-    // İlk senkron
-    syncViewBtn();
-
-    // Otomatik yükle
-    if (els.modelUrl.value) loader.loadFromURL(els.modelUrl.value);
+    soft('toggleSidebar')?.addEventListener('click', () => {
+        document.body.classList.toggle('sidebar-hidden');
+        window.dispatchEvent(new Event('resize'));
+    });
 }
 
-// DOM hazırsa hemen çalıştır, değilse bekle
+// DOM hazırsa…
 if (document.readyState === 'loading') {
     window.addEventListener('DOMContentLoaded', start);
 } else {

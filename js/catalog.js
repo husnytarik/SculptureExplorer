@@ -113,9 +113,17 @@ export function initCatalog({
 
         // select doldur
         if (selectEl) {
-            selectEl.innerHTML = '<option value="">— Kayıt seç —</option>' +
+            selectEl.innerHTML =
+                '<option value="" disabled selected>Eser Seçin</option>' +
                 items.map(r => `<option value="${r.id}">${r.title}</option>`).join('');
         }
+
+        function syncSelectAlign() {
+            const isPlaceholder = !selectEl.value;
+            selectEl.classList.toggle('placeholder-centered', isPlaceholder);
+        }
+        syncSelectAlign();
+        selectEl.addEventListener('change', syncSelectAlign);
 
         if (onLoaded) onLoaded(items);
         bindPreview(selectEl, previewEl, items);
